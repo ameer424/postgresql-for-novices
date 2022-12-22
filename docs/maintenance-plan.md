@@ -12,7 +12,7 @@ Most of the semantic analysis modules have been implemented by parsing the SQL w
 
 ### Changing error messages
 
-One can change error messages by changing the `check` member function of the class in each of the `_checker.py` files. `check()` returns either the error messaeg or `None`. One can also change the `ErrorFormatter` class to influence the output format for the error message.
+One can change error messages by changing the `check` member function of the class in each of the `_checker.py` files. `check()` returns either the error message or `None`. One can also change the `ErrorFormatter` class to influence the output format for the error message.
 
 ## Frontend
 
