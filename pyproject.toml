@@ -32,8 +32,6 @@ autopep8 = "^1.7.0"
 poetry-githooks = "^2.0.0"
 black = "^22.10.0"
 isort = "^5.10.1"
-
-[tool.poetry.group.ci.dependencies]
 pylint = "^2.15.4"
 mypy = "^0.982"
 

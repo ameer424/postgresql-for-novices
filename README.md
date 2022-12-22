@@ -69,7 +69,7 @@ Note that the GitHub Pages site is only updated on pushes to `main` branch.
 
 ### Linters and formatters
 
-For linting, you need the CI tools: `poetry install --with=ci`. The tools used are:
+For linting, the following tools are used:
 - `black` for formatting
 - `pylint` for linting
 - `mypy` for static type checking
