@@ -1,14 +1,14 @@
-import pytest
 from os import getenv
-from pytest_postgresql import factories
+
 import psycopg
-from psycopg import Connection
+import pytest
 import sqlglot
 import sqlglot.expressions as exp
+from psycopg import Connection
+from pytest_postgresql import factories
 
-from ..sqlparser import SqlParser
-from ..sqlparser import Column
 from ..cmp_domain_checker import CmpDomainChecker
+from ..sqlparser import Column, SqlParser
 
 # These are useful so we can refer to the same table names in load_database and
 # in the tests without horrible to debug bugs caused by a typo.
@@ -544,7 +544,8 @@ def load_database(**kwargs):
         insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (247, 123.55, 179);
         insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (248, 321.97, 195);
         insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (249, 491.05, 63);
-        insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (250, 367.56, 214);""")
+        insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (250, 367.56, 214);"""
+        )
         conn.commit()
 
 
@@ -561,35 +562,30 @@ def sql_parser(postgresql: Connection):
 
 def test_check(sql_parser: SqlParser):
 
-    SQL_VARCHAR_SUSPICIOUS = \
-        f"""
+    SQL_VARCHAR_SUSPICIOUS = f"""
 SELECT customer_id
 FROM {CUSTOMERS_TABLE_NAME}
 WHERE fname > nickname;"""
 
-    SQL_MULTI_VARCHAR_SUSPICIOUS = \
-        f"""
+    SQL_MULTI_VARCHAR_SUSPICIOUS = f"""
 SELECT customer_id
 FROM {CUSTOMERS_TABLE_NAME}
 WHERE fname > nickname AND
       sname < nickname AND
       customer_id = customer_id;"""
 
-    SQL_INT_VARCHAR_VALID = \
-        f"""
+    SQL_INT_VARCHAR_VALID = f"""
 SELECT customer_id
 FROM {CUSTOMERS_TABLE_NAME}
 WHERE fname > customer_id;"""
 
-    SQL_MULTI_CMP_VALID = \
-        f"""
+    SQL_MULTI_CMP_VALID = f"""
 SELECT *
 FROM {ORDERS_TABLE_NAME}
 WHERE (order_total_eur = order_total_eur) OR
       (order_total_eur = 0 AND order_total_eur = 100);"""
 
-    SQL_NESTED_WHERE_VALID = \
-        f"""
+    SQL_NESTED_WHERE_VALID = f"""
 SELECT *
 FROM {ORDERS_TABLE_NAME}
 WHERE (order_total_eur = order_total_eur) AND
@@ -597,8 +593,7 @@ WHERE (order_total_eur = order_total_eur) AND
                        FROM {CUSTOMERS_TABLE_NAME} AS c
                        WHERE c.type = 'B');"""
 
-    SQL_NESTED_WHERE_SUSPICIOUS = \
-        f"""
+    SQL_NESTED_WHERE_SUSPICIOUS = f"""
 SELECT *
 FROM {ORDERS_TABLE_NAME}
 WHERE (order_total_eur = order_total_eur) AND

@@ -1,19 +1,19 @@
 # Written by Tatu Heikkilä, tatu.heikkila@tuni.fi
 # Licensed under MIT.
 """Handle semantic analysis modules."""
-from typing import Optional, Type, Any
+from typing import Any, Optional, Type
+
 import psycopg
 from sqlglot import exp
 
-from .config_values import ConfigValues
-from .sqlparser import SqlParser, Column
-from .qepparser import QEPAnalysis, QEPParser
-
 # analysis modules
 from .cmp_domain_checker import CmpDomainChecker
+from .config_values import ConfigValues
 from .eq_wildcard_checker import EqWildcardChecker
 from .implied_expression_checker import ImpliedExpressionChecker
 from .inconsistent_expression_checker import InconsistentExpressionChecker
+from .qepparser import QEPAnalysis, QEPParser
+from .sqlparser import Column, SqlParser
 from .strange_having_checker import StrangeHavingChecker
 from .subquery_order_by_checker import SubqueryOrderByChecker
 from .subquery_select_checker import SubquerySelectChecker
@@ -30,7 +30,7 @@ class SemanticRouter:
         pg_user: str,
         pg_pass: str,
         pg_name: str,
-        config_values: Optional[ConfigValues]
+        config_values: Optional[ConfigValues],
     ):
         """Initialize Postgres connection with given paramaters."""
         self.pg_host: str = pg_host
@@ -40,10 +40,7 @@ class SemanticRouter:
         self.pg_name: str = pg_name
         self.config_values: Optional[ConfigValues] = config_values
 
-    def run_analysis(
-        self,
-        sql_query: str
-    ) -> str:
+    def run_analysis(self, sql_query: str) -> str:
         """Run analysis modules on SQL query string and get an insightful \
         message in return.
 
@@ -56,23 +53,23 @@ class SemanticRouter:
         """
         try:
             with psycopg.connect(
-                "host=" + self.pg_host +
-                " port=" + self.pg_port +
-                " dbname=" + self.pg_name +
-                " user=" + self.pg_user +
-                " password=" + self.pg_pass
+                "host="
+                + self.pg_host
+                + " port="
+                + self.pg_port
+                + " dbname="
+                + self.pg_name
+                + " user="
+                + self.pg_user
+                + " password="
+                + self.pg_pass
             ) as conn:
-                sql_parser: SqlParser = \
-                    SqlParser(conn)
-                sanitized_sql: exp.Expression = \
-                    sql_parser.parse_one(sql_query)
-                qep_analysis: QEPAnalysis = \
-                    QEPParser(conn=conn).parse(sql_query)
-                analysis_result: Optional[str] = \
-                    None
+                sql_parser: SqlParser = SqlParser(conn)
+                sanitized_sql: exp.Expression = sql_parser.parse_one(sql_query)
+                qep_analysis: QEPAnalysis = QEPParser(conn=conn).parse(sql_query)
+                analysis_result: Optional[str] = None
 
-                columns: list[Column] = \
-                    sql_parser.get_query_columns(sanitized_sql)
+                columns: list[Column] = sql_parser.get_query_columns(sanitized_sql)
 
                 def is_disabled_in_config(checker_class: Type[Any]) -> bool:
                     if self.config_values is None:
@@ -82,10 +79,7 @@ class SemanticRouter:
 
                 # Comparing different domains
                 if not is_disabled_in_config(CmpDomainChecker):
-                    analysis_result = CmpDomainChecker(
-                        sanitized_sql,
-                        columns
-                    ).check()
+                    analysis_result = CmpDomainChecker(sanitized_sql, columns).check()
 
                     if analysis_result is not None:
                         return analysis_result
@@ -93,8 +87,7 @@ class SemanticRouter:
                 # ORDER BY in subquery
                 if not is_disabled_in_config(SubqueryOrderByChecker):
                     analysis_result = SubqueryOrderByChecker(
-                        sanitized_sql,
-                        qep_analysis
+                        sanitized_sql, qep_analysis
                     ).check()
 
                     if analysis_result is not None:
@@ -103,8 +96,7 @@ class SemanticRouter:
                 # SELECT in subquery
                 if not is_disabled_in_config(SubquerySelectChecker):
                     analysis_result = SubquerySelectChecker(
-                        sanitized_sql,
-                        sql_parser
+                        sanitized_sql, sql_parser
                     ).check()
 
                     if analysis_result is not None:
@@ -113,9 +105,7 @@ class SemanticRouter:
                 # Implied expression
                 if not is_disabled_in_config(ImpliedExpressionChecker):
                     analysis_result = ImpliedExpressionChecker(
-                        sanitized_sql,
-                        sql_query,
-                        conn
+                        sanitized_sql, sql_query, conn
                     ).check()
 
                     if analysis_result is not None:
@@ -124,8 +114,7 @@ class SemanticRouter:
                 # Strange HAVING clause without GROUP BY
                 if not is_disabled_in_config(StrangeHavingChecker):
                     analysis_result = StrangeHavingChecker(
-                        sanitized_sql,
-                        qep_analysis
+                        sanitized_sql, qep_analysis
                     ).check()
 
                 if analysis_result is not None:
@@ -134,8 +123,7 @@ class SemanticRouter:
                 # SUM/AVG(DISTINCT)
                 if not is_disabled_in_config(SumDistinctChecker):
                     analysis_result = SumDistinctChecker(
-                        sanitized_sql,
-                        qep_analysis
+                        sanitized_sql, qep_analysis
                     ).check()
 
                     if analysis_result is not None:
@@ -144,8 +132,7 @@ class SemanticRouter:
                 # Wildcards without LIKE
                 if not is_disabled_in_config(EqWildcardChecker):
                     analysis_result = EqWildcardChecker(
-                        sanitized_sql,
-                        qep_analysis
+                        sanitized_sql, qep_analysis
                     ).check()
 
                     if analysis_result is not None:
@@ -154,8 +141,7 @@ class SemanticRouter:
                 # Inconsistent expression
                 if not is_disabled_in_config(InconsistentExpressionChecker):
                     analysis_result = InconsistentExpressionChecker(
-                        sanitized_sql,
-                        qep_analysis
+                        sanitized_sql, qep_analysis
                     ).check()
 
                     if analysis_result is not None:

@@ -1,10 +1,10 @@
-import pytest
-from pytest_postgresql import factories
 import psycopg
+import pytest
 from psycopg import Connection
+from pytest_postgresql import factories
 
-from ..sqlparser import SqlParser
 from ..implied_expression_checker import ImpliedExpressionChecker
+from ..sqlparser import SqlParser
 
 CUSTOMERS_TABLE_NAME = "implied_expression_orderby_test_table_customers"
 ORDERS_TABLE_NAME = "implied_expression_test_table_orders"
@@ -537,7 +537,8 @@ def load_database(**kwargs):
         insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (247, 123.55, 179);
         insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (248, 321.97, 195);
         insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (249, 491.05, 63);
-        insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (250, 367.56, 214);""")
+        insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (250, 367.56, 214);"""
+        )
         conn.commit()
 
 
@@ -558,40 +559,34 @@ def db_connection(postgresql: Connection):
 
 
 def test_check(sql_parser: SqlParser, db_connection: Connection):
-    SQL_CHECK_CONSTRAINT_VIOLATION = \
-        f"""
+    SQL_CHECK_CONSTRAINT_VIOLATION = f"""
 SELECT customer_id, fname, sname
 FROM {CUSTOMERS_TABLE_NAME}
 WHERE type = 'A';"""
 
-    SQL_NOT_NULL_CONSTRAINT_VIOLATION = \
-        f"""
+    SQL_NOT_NULL_CONSTRAINT_VIOLATION = f"""
 SELECT *
 FROM {CUSTOMERS_TABLE_NAME}
 WHERE sname IS NULL;"""
 
-    SQL_NO_IMPLIED_EXPRESSION = \
-        f"""
+    SQL_NO_IMPLIED_EXPRESSION = f"""
 SELECT *
 FROM {CUSTOMERS_TABLE_NAME}
 WHERE sname > fname;"""
 
-    SQL_SIMPLE = \
-        f"""
+    SQL_SIMPLE = f"""
 SELECT (1, 2, 3);"""
 
     sql_statement = SQL_CHECK_CONSTRAINT_VIOLATION
     parsed_sql = sql_parser.parse_one(sql_statement)
-    checker = ImpliedExpressionChecker(
-        parsed_sql, sql_statement, db_connection)
+    checker = ImpliedExpressionChecker(parsed_sql, sql_statement, db_connection)
     assert checker != None
     warning_msg = checker.check()
     assert warning_msg != None
 
     sql_statement = SQL_NOT_NULL_CONSTRAINT_VIOLATION
     parsed_sql = sql_parser.parse_one(sql_statement)
-    checker = ImpliedExpressionChecker(
-        parsed_sql, sql_statement, db_connection)
+    checker = ImpliedExpressionChecker(parsed_sql, sql_statement, db_connection)
     assert checker != None
     warning_msg = checker.check()
     assert warning_msg != None
@@ -600,16 +595,14 @@ SELECT (1, 2, 3);"""
 
     sql_statement = SQL_NO_IMPLIED_EXPRESSION
     parsed_sql = sql_parser.parse_one(sql_statement)
-    checker = ImpliedExpressionChecker(
-        parsed_sql, sql_statement, db_connection)
+    checker = ImpliedExpressionChecker(parsed_sql, sql_statement, db_connection)
     assert checker != None
     warning_msg = checker.check()
     assert warning_msg == None
 
     sql_statement = SQL_SIMPLE
     parsed_sql = sql_parser.parse_one(sql_statement)
-    checker = ImpliedExpressionChecker(
-        parsed_sql, sql_statement, db_connection)
+    checker = ImpliedExpressionChecker(parsed_sql, sql_statement, db_connection)
     assert checker != None
     warning_msg = checker.check()
     assert warning_msg == None

@@ -1,44 +1,50 @@
 from itertools import chain
 from typing import Callable, Iterable, List, TypedDict
+
 import psycopg
 from psycopg import Connection
 
 from . import util  # used to test relative imports
 
-
 # TODO: break into variants discriminated by Node Type
 # right now, the interface isn't safe to use because it's not clear what fields
 # are available for each node type
-node = TypedDict("Plan", {
-    "Node Type": str,
-    "Parent Relationship": str,
-    "Startup Cost": float,
-    "Total Cost": float,
-    "Plan Rows": int,
-    "Plan Width": int,
-    "Actual Startup Time": float,
-    "Actual Total Time": float,
-    "Actual Rows": int,
-    "Actual Loops": int,
-    "Plans": List["node"],
-    "Index Cond": str,
-    "Filter": str,
-    "Relation Name": str,
-    "Alias": str,
-    "Scan Direction": str,
-    "Index Name": str,
-    "Triggers": list[str],
-    "Total Runtime": float,
-    "One-Time Filter": str,
-})
+node = TypedDict(
+    "Plan",
+    {
+        "Node Type": str,
+        "Parent Relationship": str,
+        "Startup Cost": float,
+        "Total Cost": float,
+        "Plan Rows": int,
+        "Plan Width": int,
+        "Actual Startup Time": float,
+        "Actual Total Time": float,
+        "Actual Rows": int,
+        "Actual Loops": int,
+        "Plans": List["node"],
+        "Index Cond": str,
+        "Filter": str,
+        "Relation Name": str,
+        "Alias": str,
+        "Scan Direction": str,
+        "Index Name": str,
+        "Triggers": list[str],
+        "Total Runtime": float,
+        "One-Time Filter": str,
+    },
+)
 
-qep = TypedDict("QEP", {
-    "Plan": node,
-    "Triggers": list[str],
-    "Planning Time": float,
-    "Execution Time": float,
-    "Total Runtime": float,
-})
+qep = TypedDict(
+    "QEP",
+    {
+        "Plan": node,
+        "Triggers": list[str],
+        "Planning Time": float,
+        "Execution Time": float,
+        "Total Runtime": float,
+    },
+)
 
 
 class QEPNode:
@@ -83,8 +89,7 @@ class QEPNode:
         """A list of the node's children."""
         return self._node.get("Plans", [])
 
-    def find(self, pr: Callable[[node], bool],
-             recursive=False) -> list[node]:
+    def find(self, pr: Callable[[node], bool], recursive=False) -> list[node]:
         """Finds nodes matching the predicate.
 
         :param pr: a function that takes a node and returns True if it matches
@@ -94,8 +99,9 @@ class QEPNode:
         :returns: a list of matching nodes
         """
         if recursive:
-            return self.find(pr) + \
-                list(chain.from_iterable(x.find(pr, True) for x in iter(self)))
+            return self.find(pr) + list(
+                chain.from_iterable(x.find(pr, True) for x in iter(self))
+            )
         return list(filter(pr, chain((self._node,), self.plans)))
 
     def rfind(self, pred: Callable[[node], bool]) -> list[node]:
@@ -196,8 +202,9 @@ class QEPParser:
         Returns:
             A dictionary representing the query execution plan.
         """
-        stmt = "explain (format json, analyze, verbose) " + \
-            stmt.strip().rstrip(';') + ";"
+        stmt = (
+            "explain (format json, analyze, verbose) " + stmt.strip().rstrip(";") + ";"
+        )
         try:
             with self._conn.cursor() as cur:
                 cur.execute(stmt, *args, **kwargs)
@@ -215,7 +222,6 @@ class QEPParser:
         except psycopg.Error as e:
             self._conn.rollback()
 
-
     def parse(self, stmt: str, *args, **kwargs) -> QEPAnalysis:
-        '''Alias for __call__'''
+        """Alias for __call__"""
         return self(stmt, *args, **kwargs)

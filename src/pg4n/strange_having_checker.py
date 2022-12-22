@@ -2,8 +2,8 @@ from typing import Optional
 
 import sqlglot.expressions as exp
 
-from .qepparser import QEPAnalysis
 from .errfmt import ErrorFormatter
+from .qepparser import QEPAnalysis
 
 
 class StrangeHavingChecker:

@@ -11,7 +11,7 @@ from shutil import get_terminal_size
 from typing import Callable, List
 
 import pexpect
-from pyte import Stream, Screen
+from pyte import Screen, Stream
 
 from .psqlparser import PsqlParser
 
@@ -31,7 +31,7 @@ class PsqlWrapper:
         psql_args: bytes,
         hook_semantic_f: Callable[[str], str],
         hook_syntax_f: Callable[[str], str],
-        parser: PsqlParser
+        parser: PsqlParser,
     ):
         """Build wrapper for selected database.
 
@@ -61,9 +61,7 @@ class PsqlWrapper:
         # and resulting message is saved here until when new prompt comes in
         self.pg4n_message: str = ""
 
-    def start(
-        self
-    ) -> None:
+    def start(self) -> None:
         """Start psql process and feed hook functions with \
         intercepted queries and syntax errors.
 
@@ -76,7 +74,7 @@ class PsqlWrapper:
         c = pexpect.spawn(
             "psql " + bytes.decode(self.psql_args),
             encoding="utf-8",
-            dimensions=(self.rows, self.cols)
+            dimensions=(self.rows, self.cols),
         )
 
         c.interact(input_filter=lambda x: x, output_filter=self._intercept)
@@ -109,10 +107,7 @@ class PsqlWrapper:
                 + "."
             )
 
-    def _intercept(
-        self,
-        output: bytes
-    ) -> bytes:
+    def _intercept(self, output: bytes) -> bytes:
         """Forward output to `_check_and_act_on_repl_output` and feed \
         output to pyte screen for screenscraping.
 
@@ -125,20 +120,15 @@ class PsqlWrapper:
 
         if self.debug:
             f = open("pyte.screen", "w")
-            f.write(
-                '\n'.join(line.rstrip() for line in self.pyte_screen.display)
-            )
+            f.write("\n".join(line.rstrip() for line in self.pyte_screen.display))
             f.close()
             g = open("psqlwrapper.log", "a")
-            g.write(str(new_output) + '\n')
+            g.write(str(new_output) + "\n")
             g.close()
 
         return new_output
 
-    def _check_and_act_on_repl_output(
-        self,
-        latest_output: bytes
-    ) -> bytes:
+    def _check_and_act_on_repl_output(self, latest_output: bytes) -> bytes:
         """Check if user has hit Return so we can start analyzing, \
         or if a fresh prompt has come in and we can show them a helpful \
         message.
@@ -158,8 +148,7 @@ class PsqlWrapper:
         # save a potential warning to be included in before next fresh prompt.
         if self._user_hit_return(latest_output):
             # get terminal screen contents
-            screen: str = \
-                '\n'.join(line.rstrip() for line in self.pyte_screen.display)
+            screen: str = "\n".join(line.rstrip() for line in self.pyte_screen.display)
 
             parsed_sql_query: str = self.parser.parse_last_stmt(screen)
             if parsed_sql_query != "":
@@ -168,9 +157,7 @@ class PsqlWrapper:
                 self.pg4n_message = self.semantic_analyze(parsed_sql_query)
 
         # If there is a fresh prompt:
-        if self.parser.output_has_new_prompt(
-                bytes.decode(latest_output)
-        ):
+        if self.parser.output_has_new_prompt(bytes.decode(latest_output)):
             # If we have a semantic error message waiting
             if self.pg4n_message != "":
                 new_output = self._replace_prompt(latest_output)
@@ -180,19 +167,14 @@ class PsqlWrapper:
             # Since latest_output contains error details, we will have to
             # see how the screen would look like, but still allow injecting
             # an insightful syntax error message from the syntax analysis.
-            potential_future_screen = \
-                deepcopy(self.pyte_screen)
-            potential_future_screen_output_sink = \
-                Stream(potential_future_screen)
-            potential_future_screen_output_sink.feed(
-                bytes.decode(latest_output)
-            )
+            potential_future_screen = deepcopy(self.pyte_screen)
+            potential_future_screen_output_sink = Stream(potential_future_screen)
+            potential_future_screen_output_sink.feed(bytes.decode(latest_output))
 
-            potential_future_contents: str = '\n'.join(
+            potential_future_contents: str = "\n".join(
                 line.rstrip() for line in potential_future_screen.display
             )
-            syntax_error = \
-                self.parser.parse_syntax_error(potential_future_contents)
+            syntax_error = self.parser.parse_syntax_error(potential_future_contents)
             if syntax_error != "":
                 self.pg4n_message = self.syntax_analyze(syntax_error)
                 new_output = self._replace_prompt(latest_output)
@@ -210,16 +192,13 @@ class PsqlWrapper:
         detecting new prompt fails.
         """
         split_prompt: List[str] = self.parser.parse_new_prompt_and_rest(
-                bytes.decode(prompt, "utf-8")
+            bytes.decode(prompt, "utf-8")
         )
         if split_prompt == []:
             return prompt  # prompt is malformed and is returned as-is.
         print_msg = self.pg4n_message.replace("\n", "\r\n")
         return bytes(
-            split_prompt[0] + "\r\n"
-            + print_msg + "\r\n\r\n"
-            + split_prompt[1],
-            "utf-8"
+            split_prompt[0] + "\r\n" + print_msg + "\r\n\r\n" + split_prompt[1], "utf-8"
         )
 
     def _user_hit_return(self, output: bytes) -> bool:
@@ -236,8 +215,6 @@ class PsqlWrapper:
 
         # complicated case: user has ctrl-R'd, copypasted command or something.
         # and the \r\n is somewhere in midst of output..
-        if self.parser.output_has_magical_return(
-                bytes.decode(output, "utf-8")
-        ):
+        if self.parser.output_has_magical_return(bytes.decode(output, "utf-8")):
             return True
         return False

@@ -1,10 +1,10 @@
-import pytest
-from pytest_postgresql import factories
 import psycopg
+import pytest
 from psycopg import Connection
+from pytest_postgresql import factories
 
-from ..sqlparser import SqlParser
 from ..qepparser import QEPParser
+from ..sqlparser import SqlParser
 from ..subquery_order_by_checker import SubqueryOrderByChecker
 
 CUSTOMERS_TABLE_NAME = "subquery_order_by_test_table_customers"
@@ -540,7 +540,8 @@ def load_database(**kwargs):
         insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (247, 123.55, 179);
         insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (248, 321.97, 195);
         insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (249, 491.05, 63);
-        insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (250, 367.56, 214);""")
+        insert into {ORDERS_TABLE_NAME} (order_id, order_total_eur, customer_id) values (250, 367.56, 214);"""
+        )
         conn.commit()
 
 
@@ -561,8 +562,7 @@ def qep_parser(postgresql: Connection):
 
 
 def test_subquery_order_by(sql_parser: SqlParser, qep_parser: QEPParser):
-    SQL_WITHOUT_OUTER_ORDER = \
-        f"""
+    SQL_WITHOUT_OUTER_ORDER = f"""
 SELECT *
 FROM {CUSTOMERS_TABLE_NAME} c
 WHERE EXISTS (SELECT *
@@ -570,8 +570,7 @@ WHERE EXISTS (SELECT *
               WHERE c.customer_id = o.customer_id
               ORDER BY o.customer_id);"""
 
-    SQL_OUTER_ORDER_WITHOUT_INNER_ORDER = \
-        f"""
+    SQL_OUTER_ORDER_WITHOUT_INNER_ORDER = f"""
 SELECT *
 FROM {CUSTOMERS_TABLE_NAME} c
 WHERE EXISTS (SELECT *
@@ -579,8 +578,7 @@ WHERE EXISTS (SELECT *
               WHERE c.customer_id = o.customer_id)
 ORDER BY c.customer_id;"""
 
-    SQL_OUTER_ORDER_WITH_INNER_ORDER = \
-        f"""
+    SQL_OUTER_ORDER_WITH_INNER_ORDER = f"""
 SELECT *
 FROM {CUSTOMERS_TABLE_NAME} c
 WHERE EXISTS (SELECT *
@@ -589,8 +587,7 @@ WHERE EXISTS (SELECT *
               ORDER BY o.customer_id)
 ORDER BY c.customer_id;"""
 
-    SQL_MULTIPLE_INNER_ORDERS = \
-        f"""
+    SQL_MULTIPLE_INNER_ORDERS = f"""
 SELECT *
 FROM {CUSTOMERS_TABLE_NAME} c
 WHERE EXISTS (SELECT *
@@ -602,8 +599,7 @@ WHERE EXISTS (SELECT *
               WHERE c.customer_id = o.customer_id
               ORDER BY o.customer_id);"""
 
-    SQL_NESTED_SUBQUERY_INNER_ORDER = \
-        f"""
+    SQL_NESTED_SUBQUERY_INNER_ORDER = f"""
 SELECT *
 FROM {CUSTOMERS_TABLE_NAME} c
 WHERE EXISTS (SELECT *

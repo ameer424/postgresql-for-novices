@@ -10,6 +10,10 @@ Most of the semantic analysis modules have been implemented by parsing the SQL w
 
 `PsqlWrapper` has a `hook_syntax_f` function parameter (of type `str -> str`), which is called with `PsqlParser.parse_syntax_error`-produced string, ideally "ERROR: ... ^", which, to our understanding, will always include the whole result, and also the SQL query itself (as caret will point to it), so it does not have to be parsed separately. A syntax error analysis component should then return a message string, and it will be displayed in exactly the same way as semantic error strings.
 
+### Changing error messages
+
+One can change error messages by changing the `check` member function of the class in each of the `_checker.py` files. `check()` returns either the error messaeg or `None`. One can also change the `ErrorFormatter` class to influence the output format for the error message.
+
 ## Frontend
 
 ### Fixing parsing/interception bugs

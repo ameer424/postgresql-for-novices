@@ -3,8 +3,8 @@ from typing import Optional
 
 import sqlglot.expressions as exp
 
-from .sqlparser import SqlParser
 from .errfmt import ErrorFormatter
+from .sqlparser import SqlParser
 
 VT100_UNDERLINE = "\x1b[4m"
 VT100_RESET = "\x1b[0m"
@@ -35,7 +35,6 @@ class SubquerySelectChecker:
 
         warning = "No column in subquery SELECT references its tables"
         warning_name = type(self).__name__.rstrip("Checker")
-
 
         for i, nested_condition_context in enumerate(self.nested_condition_contexts):
             whole_statement = str(self.parsed_sql)
