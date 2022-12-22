@@ -1,15 +1,15 @@
-from functools import reduce
 import sys
+from functools import reduce
 from typing import Optional
 
 import pexpect
 
-from .psqlconninfo import PsqlConnInfo
-from .semanticrouter import SemanticRouter
-from .psqlparser import PsqlParser
-from .psqlwrapper import PsqlWrapper
 from .config_reader import ConfigReader
 from .config_values import ConfigValues
+from .psqlconninfo import PsqlConnInfo
+from .psqlparser import PsqlParser
+from .psqlwrapper import PsqlWrapper
+from .semanticrouter import SemanticRouter
 
 
 def main() -> None:
@@ -28,7 +28,7 @@ def main() -> None:
     if len(sys.argv) > 1:
         conn_info = PsqlConnInfo(
             reduce(lambda x, y: x + y, sys.argv[1:], "")  # concat arguments
-            ).get()
+        ).get()
         if conn_info is not None:
             # asterisk unpacks the 5-tuple
             sem_router = SemanticRouter(*conn_info, config_values)
@@ -38,7 +38,7 @@ def main() -> None:
                 sem_router.run_analysis,
                 # no syntax error analysis:
                 lambda syntax_error_analysis: "",
-                PsqlParser()
+                PsqlParser(),
             )
             psql.start()
         else:
@@ -46,10 +46,7 @@ def main() -> None:
             # e.g. "pg4n --help" is being run.
             # for simplicity, just use pexpect here
             psql_output = pexpect.spawn(
-                "psql "
-                + reduce(
-                    lambda x, y: x + y, sys.argv[1:], ""
-                )
+                "psql " + reduce(lambda x, y: x + y, sys.argv[1:], "")
             )
             psql_output.expect(pexpect.EOF)
             print(bytes.decode(psql_output.before))

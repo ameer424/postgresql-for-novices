@@ -1,7 +1,7 @@
-import pytest
-from pytest_postgresql import factories
 import psycopg
+import pytest
 from psycopg import Connection
+from pytest_postgresql import factories
 
 from ..sqlparser import SqlParser
 from ..subquery_select_checker import SubquerySelectChecker

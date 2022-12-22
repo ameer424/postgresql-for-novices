@@ -1,9 +1,9 @@
-import pytest
-import psycopg
-
 from os import getenv
-from pytest_postgresql import factories
+
+import psycopg
+import pytest
 from psycopg import Connection
+from pytest_postgresql import factories
 
 from .. import qepparser
 
@@ -11,7 +11,8 @@ from .. import qepparser
 def load_database(**kwargs):
     conn: Connection = psycopg.connect(**kwargs)
     with conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(
+            """
         -- for copy-and-pasting
         drop table if exists comments;
         drop table if exists users;
@@ -35,7 +36,8 @@ def load_database(**kwargs):
         insert into comments (story_id, user_id, comment) values (1, 2, 'comment2');
         insert into comments (story_id, user_id, comment) values (2, 1, 'comment3');
         insert into comments (story_id, user_id, comment) values (2, 2, 'comment4');
-        """)
+        """
+        )
         conn.commit()
 
 
@@ -45,7 +47,8 @@ postgresql_in_docker = factories.postgresql_noproc(
     port=getenv("PGPORT", 5432),
     user=getenv("PGUSER", "postgres"),
     password=getenv("PGPASSWORD"),
-    dbname=getenv("PGDBNAME", "test_database"))
+    dbname=getenv("PGDBNAME", "test_database"),
+)
 postgresql = factories.postgresql("postgresql_in_docker")
 
 

@@ -39,6 +39,7 @@ SubquerySelect 0
 
         try:
             from pprint import pprint
+
             pprint(config_values)
             assert config_values["ImpliedExpression"] == True
             assert config_values["CmpDomain"] == False

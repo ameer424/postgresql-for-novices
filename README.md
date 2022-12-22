@@ -12,7 +12,8 @@ This README is meant for developers of the project, and not for end users. For e
     - [Running tests](#running-tests)
       - [Using docker](#using-docker)
     - [Building documents](#building-documents)
-    - [Linting](#linting)
+    - [Linters and formatters](#linters-and-formatters)
+      - [Githooks](#githooks)
 
 ## Notes for developers
 
@@ -66,7 +67,7 @@ You'll need to tell pytest the password: `PGPASSWORD=postgres poetry run pytest`
 
 Note that the GitHub Pages site is only updated on pushes to `main` branch.
 
-### Linting
+### Linters and formatters
 
 For linting, you need the CI tools: `poetry install --with=ci`. The tools used are:
 - `black` for formatting
@@ -75,3 +76,13 @@ For linting, you need the CI tools: `poetry install --with=ci`. The tools used a
 - `isort` for sorting imports
 
 To get a grade that the CI/CD pipeline would give you, you can do `poetry run scripts/ci-grade.sh` to run all the checks. The output is possibly long, so pipe it to a file perusal filter such as `less` to scroll through it and search for things of concern, e.g., `summary` to see scores.
+
+#### Githooks
+
+This project uses `poetry-githooks` to run automatic formatting on each commit. To set this up, run:
+```bash
+poetry run githooks setup
+```
+This needs to be re-run each time the `[tool.githooks]` section is modified in the `pyproject.toml` file.
+
+One can skip pre-commit hooks by running  `git commit` with the `--no-verify` flag.

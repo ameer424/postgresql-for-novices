@@ -13,14 +13,14 @@ from pyparsing import (
     Literal,
     Opt,
     ParseException,
-    ParseResults,
     ParserElement,
+    ParseResults,
     StringEnd,
     White,
     Word,
     ZeroOrMore,
     identbodychars,
-    nums
+    nums,
 )
 
 # Turn on memoization optimization
@@ -61,10 +61,10 @@ class PsqlParser:
     # %# = #, >
     # This will match against "%R%x%# ", e.g "=> ".
     tok_rev_prompt_end: ParserElement = Combine(
-            Opt(White())
-            + (Literal('#') | Literal('>'))
-            + Opt(Literal('*') | Literal('!') | Literal('?'), "")
-            + (Literal('=') | Literal('^'))
+        Opt(White())
+        + (Literal("#") | Literal(">"))
+        + Opt(Literal("*") | Literal("!") | Literal("?"), "")
+        + (Literal("=") | Literal("^"))
     )
 
     # %/%R%x%# per postgres bin/psql/settings.h
@@ -76,15 +76,56 @@ class PsqlParser:
     # This will match against "%R%x%# ", e.g "-> ".
     # To save time, since linebreak prompts are only removed,
     # just match against a list of all possible combinations
-    multiline_prompt_ends: list[str] = \
-        ["-#", "*#", "\'#", "\"#", "$#", "(#",
-         "->", "*>", "\'>", "\">", "$>", "(>",
-         "-*#", "**#", "\'*#", "\"*#", "$*#", "(*#",
-         "-*>", "**>", "\'*>", "\"*>", "$*>", "(*>",
-         "-!#", "*!#", "\'!#", "\"!#", "$!#", "(!#",
-         "-!>", "*!>", "\'!>", "\"!>", "$!>", "(!>",
-         "-?#", "*?#", "\'?#", "\"?#", "$?#", "(?#",
-         "-?>", "*?>", "\'?>", "\"?>", "$?>", "(?>"]
+    multiline_prompt_ends: list[str] = [
+        "-#",
+        "*#",
+        "'#",
+        '"#',
+        "$#",
+        "(#",
+        "->",
+        "*>",
+        "'>",
+        '">',
+        "$>",
+        "(>",
+        "-*#",
+        "**#",
+        "'*#",
+        '"*#',
+        "$*#",
+        "(*#",
+        "-*>",
+        "**>",
+        "'*>",
+        '"*>',
+        "$*>",
+        "(*>",
+        "-!#",
+        "*!#",
+        "'!#",
+        '"!#',
+        "$!#",
+        "(!#",
+        "-!>",
+        "*!>",
+        "'!>",
+        '"!>',
+        "$!>",
+        "(!>",
+        "-?#",
+        "*?#",
+        "'?#",
+        '"?#',
+        "$?#",
+        "(?#",
+        "-?>",
+        "*?>",
+        "'?>",
+        '"?>',
+        "$?>",
+        "(?>",
+    ]
     # ParserElement for these would look this:
     #    tok_multiline_prompt_end: ParserElement = \
     #        Combine(
@@ -119,8 +160,7 @@ class PsqlParser:
         magical_return_res: Optional[ParseResults] = None
 
         try:
-            magical_return_res = \
-                match_rev_magical_returns.parse_string(psql_rev)
+            magical_return_res = match_rev_magical_returns.parse_string(psql_rev)
         except ParseException as e:
             if self.debug:
                 f = open("psqlparser.log", "a")
@@ -172,14 +212,15 @@ class PsqlParser:
         prompt_res: Optional[ParseResults] = None
 
         match_rev_prompt_and_then_rest: ParserElement = (
-            self.tok_rev_prompt_end 
+            self.tok_rev_prompt_end
             + Word(self.prompt_chars)
-            + (StringEnd()         # output may stop at end of db name,
-               | (  # or continue \x1b[?.. 
-                   Literal("?[\x1b")  # in this case control code parameter
-                   + ...              # has already been parsed as prompt_chars
-                   + StringEnd()
-               )
+            + (
+                StringEnd()  # output may stop at end of db name,
+                | (  # or continue \x1b[?..
+                    Literal("?[\x1b")  # in this case control code parameter
+                    + ...  # has already been parsed as prompt_chars
+                    + StringEnd()
+                )
             )
         )
 
@@ -195,14 +236,11 @@ class PsqlParser:
         if prompt_res:
             res_list = prompt_res.as_list()
             if len(res_list) == 2:  # parsing stops right after database name
-                results = [
-                    '',
-                    res_list[1][::-1] + res_list[0][::-1]
-                ]
+                results = ["", res_list[1][::-1] + res_list[0][::-1]]
             elif len(res_list) == 4:  # results include \x1b[?2004h..
                 results = [
                     res_list[3][::-1],
-                    res_list[2][::-1] + res_list[1][::-1] + res_list[0][::-1]
+                    res_list[2][::-1] + res_list[1][::-1] + res_list[0][::-1],
                 ]
 
         return results
@@ -220,13 +258,10 @@ class PsqlParser:
         # Match statement that might have \r\n or whitespace at the end.
         # Parse prompt text at the end, so multiline queries can be cleaned
         # properly.
-        tok_stmt_end: ParserElement = Char(';')
+        tok_stmt_end: ParserElement = Char(";")
 
         match_rev_any_sql_stmt: ParserElement = (
-            ZeroOrMore(White())
-            + tok_stmt_end
-            + ...
-            + self.tok_rev_prompt_end
+            ZeroOrMore(White()) + tok_stmt_end + ... + self.tok_rev_prompt_end
         )
 
         match_rev_last_stmt: ParserElement = (
@@ -252,16 +287,11 @@ class PsqlParser:
             stmt_res_list = stmt_res.as_list()
             length: int = len(stmt_res_list)
 
-            results = [
-                stmt_res_list[length - 3],
-                stmt_res_list[length - 4]
-            ]
+            results = [stmt_res_list[length - 3], stmt_res_list[length - 4]]
             db_name = stmt_res_list[length - 1][::-1]
 
         # reverse back, concatenate, and remove \n's
-        unreversed_flattened_res: str = reduce(
-            lambda x, y: x + y[::-1], results, ""
-        )
+        unreversed_flattened_res: str = reduce(lambda x, y: x + y[::-1], results, "")
 
         # Replacing \n's has some edge cases where wrapper transparency
         # breaks, because both of these work right in straight psql. See:
@@ -273,17 +303,15 @@ class PsqlParser:
         # should convert \n -> " " to avoid "SELECT* FROM ..".
         #
         # Replacing \n's with " " seems to have less edge cases.
-        no_newlines_res = unreversed_flattened_res.replace('\n', ' ')
+        no_newlines_res = unreversed_flattened_res.replace("\n", " ")
 
         # Is the statement a SELECT statement?
-        match_select_stmt: ParserElement = (
-            ZeroOrMore(White())
-            + CaselessLiteral("SELECT")
+        match_select_stmt: ParserElement = ZeroOrMore(White()) + CaselessLiteral(
+            "SELECT"
         )
         is_select: bool = False
         try:
-            is_select = \
-                match_select_stmt.parse_string(no_newlines_res) is not []
+            is_select = match_select_stmt.parse_string(no_newlines_res) is not []
         except ParseException as e:
             if self.debug:
                 f = open("psqlparser.log", "a")
@@ -307,13 +335,8 @@ class PsqlParser:
         :param psql: psql --version output
         :returns: version string (e.g "14.5")
         """
-        match_version_stmt: ParserElement = (
-            Literal("psql (PostgreSQL) ")
-            + Combine(
-                Word(nums)
-                + '.'
-                + Word(nums)
-            )
+        match_version_stmt: ParserElement = Literal("psql (PostgreSQL) ") + Combine(
+            Word(nums) + "." + Word(nums)
         )
         stmt_res: Optional[ParseResults] = None
         result: str = ""
@@ -342,10 +365,7 @@ class PsqlParser:
         tok_marker_caret: ParserElement = Literal("^")
         tok_rev_error: ParserElement = Literal(":RORRE")
         match_error_statement: ParserElement = (
-            ...
-            + tok_marker_caret
-            + ...
-            + tok_rev_error
+            ... + tok_marker_caret + ... + tok_rev_error
         )
 
         results: list[str] = []
@@ -361,10 +381,7 @@ class PsqlParser:
 
         if stmt_res is not None:
             stmt_res_list = stmt_res.as_list()
-            results = [stmt_res_list[3],
-                       stmt_res_list[2],
-                       stmt_res_list[1]]
-        unreversed_flattened_res: str = \
-            reduce(lambda x, y: x + y[::-1], results, "")
+            results = [stmt_res_list[3], stmt_res_list[2], stmt_res_list[1]]
+        unreversed_flattened_res: str = reduce(lambda x, y: x + y[::-1], results, "")
 
         return unreversed_flattened_res

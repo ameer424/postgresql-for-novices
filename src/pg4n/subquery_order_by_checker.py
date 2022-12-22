@@ -2,8 +2,8 @@ from typing import Optional
 
 import sqlglot.expressions as exp
 
-from .qepparser import QEPAnalysis
 from .errfmt import ErrorFormatter
+from .qepparser import QEPAnalysis
 
 
 class SubqueryOrderByChecker:
@@ -26,8 +26,7 @@ class SubqueryOrderByChecker:
             return None
 
         has_orderby = self.parsed_sql.find(exp.Order) is not None
-        has_sort_node = len(
-            self.qep_analysis.root.rfindval("Node Type", "Sort")) > 0
+        has_sort_node = len(self.qep_analysis.root.rfindval("Node Type", "Sort")) > 0
         has_inner_orderby = has_orderby and not has_sort_node
 
         if not has_inner_orderby:
