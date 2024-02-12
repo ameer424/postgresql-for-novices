@@ -10,7 +10,9 @@ from .psqlconninfo import PsqlConnInfo
 from .psqlparser import PsqlParser
 from .psqlwrapper import PsqlWrapper
 from .semanticrouter import SemanticRouter
-
+#----------------
+from .syntaxrouter import SyntaxRouter
+#-----------
 
 def main() -> None:
     """Initiate session by getting psql connection parameters via psql \
@@ -32,12 +34,19 @@ def main() -> None:
         if conn_info is not None:
             # asterisk unpacks the 5-tuple
             sem_router = SemanticRouter(*conn_info, config_values)
+            #-----------------------------------------------------
+            # omaaa koodia
+            synx_router = SyntaxRouter(*conn_info, config_values)
+            #-----------------------------------------------------
             psql = PsqlWrapper(
                 sys.argv[1].encode("utf-8"),
                 # semantic analysis:
                 sem_router.run_analysis,
                 # no syntax error analysis:
-                lambda syntax_error_analysis: "",
+
+                # uusi syntax error injekti
+                synx_router.run_analysis,
+
                 PsqlParser(),
             )
             psql.start()
