@@ -385,3 +385,36 @@ class PsqlParser:
         unreversed_flattened_res: str = reduce(lambda x, y: x + y[::-1], results, "")
 
         return unreversed_flattened_res
+
+    def parse_syntax_error_query(self, psql: str) -> str:
+        """Parse for syntax error query output.
+
+        :param psql: screen-scraped psql output.
+        :returns: syntax error message from ':RORRE' to last '#'.
+        :in return left front and end literal away
+        """
+        psql_rev = psql[::-1]
+
+        tok_marker_caret: ParserElement = Literal(":RORRE")
+        tok_rev_error: ParserElement = Literal("#")
+        match_error_statement: ParserElement = (
+            ... + tok_marker_caret + ... + tok_rev_error
+        )
+
+        results: list[str] = []
+        stmt_res: Optional[ParseResults] = None
+
+        try:
+            stmt_res = match_error_statement.parse_string(psql_rev)
+        except ParseException as e:
+            if self.debug:
+                f = open("psqlparser.log", "a")
+                f.write(str(e.explain()) + "\n")
+                f.close()
+
+        if stmt_res is not None:
+            stmt_res_list = stmt_res.as_list()
+            results = [stmt_res_list[3], stmt_res_list[2], stmt_res_list[1]]
+        unreversed_flattened_res: str = reduce(lambda x, y: x + y[::-1], results, "")
+
+        return unreversed_flattened_res[2:-6]

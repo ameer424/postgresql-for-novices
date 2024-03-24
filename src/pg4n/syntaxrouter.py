@@ -24,7 +24,8 @@ class SyntaxRouter:
         self.config_values: Optional[ConfigValues] = config_values
     
     
-    def run_analysis(self, sql_query: str) -> str:
+    def run_analysis(self, sql_error: str,sql_query: str, sql_schema: str) -> str:
+        print("Schema: " + sql_schema)
         tunnistus = "Ahaa, uusi syntax virhe löydetty."
-        täydennys = "\n tähän tulee LLM generoimat tilpehöörit"
-        return tunnistus + täydennys
+        täydennys = "\n tähän tulee LLM generoimat tilpehöörit"        
+        return sql_query + " " + sql_error
