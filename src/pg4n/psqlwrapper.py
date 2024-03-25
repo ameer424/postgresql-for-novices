@@ -15,8 +15,6 @@ from pyte import Screen, Stream
 
 from .psqlparser import PsqlParser
 
-from .get_postre_schema import Postgres_schema
-
 class PsqlWrapper:
     """Handles terminal interfacing with psql, using the parameter parser \
     to pick up relevant SQL statements and syntax errors for hook functions."""
@@ -177,9 +175,8 @@ class PsqlWrapper:
             )
             syntax_error = self.parser.parse_syntax_error(potential_future_contents)
             if syntax_error != "":
-                syntax_error_query = self.parser.parse_syntax_error_query(potential_future_contents)
-                postgres_schema = Postgres_schema.get_postgres_schema("host=127.0.0.1 port=5432 dbname=template1 user=root password=test ")                
-                self.pg4n_message = self.syntax_analyze(syntax_error,syntax_error_query,"".join(str(line) for line in postgres_schema))
+                syntax_error_query = self.parser.parse_syntax_error_query(potential_future_contents)                                
+                self.pg4n_message = self.syntax_analyze(syntax_error,syntax_error_query)
                 new_output = self._replace_prompt(latest_output)
                 self.pg4n_message = ""
                 return new_output

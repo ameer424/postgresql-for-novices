@@ -390,7 +390,7 @@ class PsqlParser:
         """Parse for syntax error query output.
 
         :param psql: screen-scraped psql output.
-        :returns: syntax error message from ':RORRE' to last '#'.
+        :returns: syntax error message from 'ERROR:' to last '#'.
         :in return left front and end literal away
         """
         psql_rev = psql[::-1]
