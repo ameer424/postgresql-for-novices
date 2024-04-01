@@ -15,6 +15,8 @@ from pyte import Screen, Stream
 
 from .psqlparser import PsqlParser
 
+from .find_commands import Find_commands
+
 class PsqlWrapper:
     """Handles terminal interfacing with psql, using the parameter parser \
     to pick up relevant SQL statements and syntax errors for hook functions."""
@@ -113,6 +115,7 @@ class PsqlWrapper:
         :param output: output seen on terminal screen.
         :returns: output with injected semantic error messages.
         """
+        
         new_output: bytes = self._check_and_act_on_repl_output(output)
 
         self.pyte_screen_output_sink.feed(bytes.decode(new_output))
@@ -145,18 +148,55 @@ class PsqlWrapper:
 
         # User hit Return: parse for potential SQL query, analyze, and
         # save a potential warning to be included in before next fresh prompt.
+        
         if self._user_hit_return(latest_output):
             # get terminal screen contents
             screen: str = "\n".join(line.rstrip() for line in self.pyte_screen.display)
-
-            parsed_sql_query: str = self.parser.parse_last_stmt(screen)
+            
+            # find if syntaxrouter command is in prompt
+            #command_found = (False,"")
+            #print("screen: " +screen)
+            command_found = Find_commands.find(screen)
+            if command_found[0]:
+            #    last_hash_index = screen.rfind('#')
+                self.pg4n_message = "Command "+ command_found[1] + " found, you can ignore the possible invalid command message!"
+            #    if self.parser.output_has_new_prompt(bytes.decode(latest_output)):
+            #    new_output = self.parser.output_has_new_prompt(bytes.decode(latest_output[:last_hash_index]))
+                new_output = bytes("",'UTF-8')
+                latest_output = ""                
+                
+                return new_output
+            
+            parsed_sql_query: str = self.parser.parse_last_stmt(screen)            
             if parsed_sql_query != "":
                 # feed query to semantic analysis hook function
                 # and save resulting message
                 self.pg4n_message = self.semantic_analyze(parsed_sql_query)
 
+
         # If there is a fresh prompt:
         if self.parser.output_has_new_prompt(bytes.decode(latest_output)):
+            #print(bytes.decode(latest_output))
+            # find if syntaxrouter command is in prompt
+            #command_found = False
+        #    command_found = Find_commands.find(bytes.decode(latest_output))
+        #    if command_found:
+        #        print("löyty")
+            #    last_hash_index = screen.rfind('#')
+            #    self.pg4n_message = "Command found"
+            #    if self.parser.output_has_new_prompt(bytes.decode(latest_output)):
+            #    new_output = self.parser.output_has_new_prompt(bytes.decode(latest_output[:last_hash_index]))
+                #new_output = bytes("Command found",'UTF-8')
+            #    latest_output = ""
+                
+            #    return new_output
+
+
+
+
+
+
+
             # If we have a semantic error message waiting
             if self.pg4n_message != "":
                 new_output = self._replace_prompt(latest_output)
@@ -174,13 +214,13 @@ class PsqlWrapper:
                 line.rstrip() for line in potential_future_screen.display
             )
             syntax_error = self.parser.parse_syntax_error(potential_future_contents)
-            if syntax_error != "":
+            if syntax_error != "":                
                 syntax_error_query = self.parser.parse_syntax_error_query(potential_future_contents)                                
                 self.pg4n_message = self.syntax_analyze(syntax_error,syntax_error_query)
                 new_output = self._replace_prompt(latest_output)
                 self.pg4n_message = ""
-                return new_output
-
+                return new_output        
+       
         return latest_output
 
     def _replace_prompt(self, prompt: bytes) -> bytes:
