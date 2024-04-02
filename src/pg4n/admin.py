@@ -2,11 +2,15 @@
 command_list = ["help", "exit"]
 
 def main():
+    """
+    Starts an infinite while loop that asks the admin for commands.
+    """
     while(True):
         command = input("Enter command: ")
         match command:
             case "help":
                 print(command_list)
+                # ask for additional parameters here.
             case "exit":
                 break
             case _:
