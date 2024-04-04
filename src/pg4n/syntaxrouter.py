@@ -40,4 +40,4 @@ class SyntaxRouter:
         #    model_helper = ModelHelper(self.config_values.get("LambdaAddress"))
         #    llm_answer = model_helper.send_request(sql_query, sql_error, schema)
         #    return llm_answer         
-        return "Error: Lambda key not available!"
+        return "Error: No lambda key!!"
