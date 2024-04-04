@@ -1,8 +1,14 @@
 import psycopg
 from psycopg import OperationalError
 
-class Postgres_schema:
-    def get_postgres_schema(connection_data):
+class Postgre_schema:
+    """
+    Class for getting postressql table schemas to help LLM give better answers.
+    """
+    def get_postgre_schema(connection_data):
+        """
+        Gets full schema at postresql
+        """
         try:
             # Establish a connection to the PostgreSQL database
             conn = psycopg.connect(

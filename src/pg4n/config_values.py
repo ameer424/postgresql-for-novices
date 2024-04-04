@@ -11,3 +11,4 @@ class ConfigValues(TypedDict):
     SubqueryOrderBy: bool
     SubquerySelect: bool
     SumDistinct: bool
+    LambdaAddress: str

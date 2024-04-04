@@ -23,8 +23,8 @@ def main() -> None:
     config_values: Optional[ConfigValues] = None
     try:
         config_reader = ConfigReader()
-        config_values = config_reader.read()
-    except Exception as e:
+        config_values = config_reader.read()                    
+    except Exception as e:        
         config_values = None
 
     if len(sys.argv) > 1:

@@ -5,7 +5,8 @@ from sqlglot import exp
 
 from .config_values import ConfigValues
 
-from .get_postre_schema import Postgres_schema
+from .get_postre_schema import Postgre_schema
+#from .modelhelper import ModelHelper
 
 class SyntaxRouter:
     def __init__(
@@ -27,13 +28,16 @@ class SyntaxRouter:
     
     
     def run_analysis(self, sql_error: str,sql_query: str) -> str:
-        schema_address = "host=" + self.pg_host + " port=" + self.pg_port + " dbname="+ self.pg_name  + " user=" + self.pg_user + " password=" +self.pg_pass
-
-        #print("schema_address:" + schema_address)
-        #postgres_schema = Postgres_schema.get_postgres_schema("host=127.0.0.1 port=5432 dbname=template1 user=root password=test ")
-        postgres_schema = Postgres_schema.get_postgres_schema("host=/var/run/postgresql port=5432 dbname=template1 user=root password=test ")
-        #print("Schema: " + "".join(str(line) for line in postgres_schema))
-        tunnistus = "Ahaa, uusi syntax virhe löydetty."
-        täydennys = "\n tähän tulee LLM generoimat tilpehöörit"
-        #print(sql_query + " " + sql_error)       
-        return ""
+        """
+        Function that calls ModelHelper class with all the attributes it needs
+        Returns LLM answer to pg4n
+        """
+        
+        #if self.config_values != None:
+        #    schema_address = "host=" + self.pg_host + " port=" + self.pg_port + " dbname="+ self.pg_name  + " user=" + self.pg_user
+        #    postgre_schema = Postgre_schema.get_postgre_schema(schema_address)
+        #    schema = "".join(str(line) for line in postgre_schema)
+        #    model_helper = ModelHelper(self.config_values.get("LambdaAddress"))
+        #    llm_answer = model_helper.send_request(sql_query, sql_error, schema)
+        #    return llm_answer         
+        return "Error: Lambda key not available!"
