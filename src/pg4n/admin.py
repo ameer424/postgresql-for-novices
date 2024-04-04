@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-COMMAND_LIST = ["help", "exit", "get"]
+COMMAND_LIST = ["help", "exit", "get", "scan", "create"]
 
 # env variables for development
 #TODO: make reading from config file
@@ -62,9 +62,35 @@ def main():
                     url = URL + "Scan"
                     #print("url: " + url)
                     scan_respose = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)
-                    print(scan_respose.text)
+                    print(scan_respose.json())
 
                      # TODO: present data 
+                
+                case "create":
+                    url = URL + "CreateKey"
+                    if not len(raw_command) > 1:
+                        print("create [ID:NAME]")
+                        continue
+                    try:
+                        ids = [str(id) for id in raw_command[1:]]
+                        #print(ids)
+                    except:
+                        print("ID not valid.")
+                    
+                    raw_payload = []
+                    for id in ids:
+                        nro, name = id.split(':')
+                        raw_payload.append({"ID":nro, "Name":name})
+
+                    payload = json.dumps(raw_payload)
+
+                    hh = {}
+                    hh.update(HEADERS)
+                    hh.update({'Content-Type': 'application/json'})
+                    
+                    print(hh)
+                    create_respose = requests.request("POST", url, headers=hh, data=payload)
+                    print(create_respose.json())
 
                 case _:
                     print("Command not found. Avaiable commands are:")
