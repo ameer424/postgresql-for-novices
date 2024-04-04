@@ -17,9 +17,14 @@ def main():
             case "exit":
                 break
             case "address":
+                # asks user to give the lambda address
                 address = input("Give lambda address: ")               
                 cwd = os.getcwd()
                 home_config_path = cwd + "/" + CONFIG_FILE_NAME
+                # Checks if there is a config file allready present in this folder.
+                # If there is, checks if the file have old address in it and ignores it
+                # and takes other lines in a list and adds new addres on it and then 
+                # saves it. 
                 if os.path.isfile(home_config_path):                    
                     try:
                         file_lines = []
@@ -36,6 +41,7 @@ def main():
                         print("An error occurred:", e)
                     print("Lambda address updated!")                   
                 else:
+                    # Writes address to file and saves it.
                     try:
                         with open(home_config_path, "w") as config_file:
                             config_file.write("address: " + address )                            

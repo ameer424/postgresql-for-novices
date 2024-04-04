@@ -177,6 +177,9 @@ class PsqlWrapper:
                 line.rstrip() for line in potential_future_screen.display
             )
             syntax_error = self.parser.parse_syntax_error(potential_future_contents)
+
+            # when syntax appears parser will get the sql query and sends it with 
+            # syntax error to syntax_analyzer
             if syntax_error != "":                
                 syntax_error_query = self.parser.parse_syntax_error_query(potential_future_contents)                                
                 self.pg4n_message = self.syntax_analyze(syntax_error,syntax_error_query)

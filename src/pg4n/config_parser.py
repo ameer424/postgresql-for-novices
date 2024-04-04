@@ -13,6 +13,7 @@ class ConfigParser:
     )
     _empty_line_matcher: re.Pattern = re.compile(r"^\s*$")
     _comment_matcher: re.Pattern = re.compile(r"^\s*#+.*$")
+    # added address pattern for syntax errors
     _address_matcher: re.Pattern = re.compile(r"^\s*address:.*$")
 
     def __init__(self, file: TextIO):
@@ -45,6 +46,7 @@ class ConfigParser:
                 line = bytes.decode(line, "utf-8")
             line = str(line)
 
+            # if address is found, add it to config_values
             if match := ConfigParser._address_matcher.match(line):
                 colon_index = line.rfind(':')
                 address = line[colon_index+1:].strip()
