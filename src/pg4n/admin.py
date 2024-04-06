@@ -19,7 +19,8 @@ URL = os.getenv('URL')
 MASTER_KEY = os.getenv('MASTER_KEY')
 
 # http request constants
-HEADERS = {'x-api-key': MASTER_KEY}
+HEADERS = {'x-api-key': MASTER_KEY,
+           'Content-Type': 'application/json'}
 PAYLOAD = {}
 
 def main():
@@ -80,12 +81,8 @@ def main():
                         nro, name = id.split(':')
                         raw_payload.append({"ID":nro, "Name":name})
                     payload = json.dumps(raw_payload)
-
-                    hh = {}
-                    hh.update(HEADERS)
-                    hh.update({'Content-Type': 'application/json'})
                     
-                    create_respose = requests.request("POST", url, headers=hh, data=payload)
+                    create_respose = requests.request("POST", url, headers=HEADERS, data=payload)
                     print(create_respose.json())
 
                     # TODO: present data 
@@ -104,22 +101,27 @@ def main():
                         raw_payload.append({"ID":id})
                     payload = json.dumps(raw_payload)
 
-                    # TODO: headers could be cleaned
-                    hh = {}
-                    hh.update(HEADERS)
-                    hh.update({'Content-Type': 'application/json'})
-
-                    create_respose = requests.request("POST", url, headers=hh, data=payload)
-                    print(create_respose.json())
+                    delete_respose = requests.request("POST", url, headers=HEADERS, data=payload)
+                    print(delete_respose.json())
 
                     # TODO: present data 
 
 # -------------------------SETAPI-----------------------------
                 case "setapi":
                     url = URL + "ApiState"
-                    if not len(raw_command) > 1:
-                        print("delete [ID]")
+                    if not len(raw_command) == 2:
+                        print("setapi [ID]")
                         continue
+
+                    set_param = raw_command[1]
+
+                    raw_payload = {'SetApiState':set_param}
+                    payload = json.dumps(raw_payload)
+
+                    setapi_respose = requests.request("POST", url, headers=HEADERS, data=payload)
+                    print(setapi_respose.json())
+
+                    # TODO: present data 
 
 # -------------------------NOCASE-----------------------------
                 case _:
