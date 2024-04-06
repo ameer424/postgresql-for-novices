@@ -110,10 +110,15 @@ def main():
                 case "setapi":
                     url = URL + "ApiState"
                     if not len(raw_command) == 2:
-                        print("setapi [ID]")
+                        print("setapi ON/OFF")
                         continue
 
                     set_param = raw_command[1]
+                    set_param = str(set_param).upper()
+
+                    if not set_param == "ON" and not set_param == "OFF":
+                        print("Invalid parameter! The parameter can only be 'ON' or 'OFF'.")
+                        continue                        
 
                     raw_payload = {'SetApiState':set_param}
                     payload = json.dumps(raw_payload)
