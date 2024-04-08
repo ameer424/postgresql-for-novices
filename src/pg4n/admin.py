@@ -23,6 +23,16 @@ HEADERS = {'x-api-key': MASTER_KEY,
            'Content-Type': 'application/json'}
 PAYLOAD = {}
 
+def print_response_json(obj):
+    try:
+        print("ID: " + obj['ID'] 
+            + ", Name: " + obj['Name'] 
+            + ", Key: " + obj['Key']
+            + ", Tokens: " + str(obj['Tokens']))
+    except:
+        print(obj['body'][1:-1]
+            + ", Statuscode: " + str(obj['statusCode']))
+
 def main():
     """
     Starts an infinite while loop that asks the admin for commands.
@@ -58,30 +68,19 @@ def main():
                     get_respose = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)
                     res_json = get_respose.json()
 
-                    i = 0 
                     for obj in res_json:
-                        #print(obj)
-                        i = i + 1
-                        try:
-                            print("ID: " + obj['ID'] 
-                                  + ", Name: " + obj['Name'] 
-                                  + ", Key: " + obj['Key']
-                                  + ", Tokens: " + str(obj['Tokens']))
-                        except:
-                            print("ID: " + raw_command_split[i] 
-                                  + ", Error: "+ obj['body'] 
-                                  + ", statuscode: " + str(obj['statusCode']))
-
-                    # TODO: present data 
+                        print_response_json(obj)
+                         
 
 # -------------------------SCAN-----------------------------
                 case "scan":
                     url = URL + "Scan"
-                    #print("url: " + url)
+                    
                     scan_respose = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)
-                    print(scan_respose.json())
+                    res_json = scan_respose.json()
 
-                     # TODO: present data 
+                    for obj in res_json:
+                        print_response_json(obj) 
                 
 # -------------------------CREATE-----------------------------                
                 case "create":
@@ -96,14 +95,17 @@ def main():
                     raw_payload = []
                     for id in ids:
                         nro, name = id.split(':')
+                        #TODO: add error handling when no nro or name is given
+                        #TODO: strip the commands from white spaces before first name
                         raw_payload.append({"ID":nro, "Name":name})
                     payload = json.dumps(raw_payload)
                     #print(payload)
                     
                     create_respose = requests.request("POST", url, headers=HEADERS, data=payload)
-                    print(create_respose.json())
-
-                    # TODO: present data 
+                    res_json = create_respose.json()
+ 
+                    for obj in res_json:
+                        print_response_json(obj)  
 
  # -------------------------DELETE-----------------------------
                 case "delete":
@@ -120,9 +122,11 @@ def main():
                     payload = json.dumps(raw_payload)
 
                     delete_respose = requests.request("DELETE", url, headers=HEADERS, data=payload)
-                    print(delete_respose.json())
+                    res_json = delete_respose.json()
 
-                    # TODO: present data 
+                    
+                    for obj in res_json:
+                      print_response_json(obj)   
 
 # -------------------------SETAPI-----------------------------
                 case "setapi":
@@ -142,9 +146,7 @@ def main():
                     payload = json.dumps(raw_payload)
 
                     setapi_respose = requests.request("POST", url, headers=HEADERS, data=payload)
-                    print(setapi_respose.json())
-
-                    # TODO: present data 
+                    print(setapi_respose.json()) 
 
 # -------------------------NOCASE-----------------------------
                 case _:
