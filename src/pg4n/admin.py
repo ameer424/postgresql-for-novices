@@ -28,8 +28,10 @@ def main():
     Starts an infinite while loop that asks the admin for commands.
     """
     while(True):
-            raw_command = [str(x) for x in input("Enter command: ").split()]
-            command = raw_command[0]
+            #raw_command = [str(x) for x in input("Enter command: ").split()]
+            raw_command = input("Enter command: ")
+            raw_command_split = raw_command.split()
+            command = raw_command_split[0]
 
             match command:
                 case "help":
@@ -43,18 +45,32 @@ def main():
 
 # -------------------------GET-----------------------------
                 case "get":
-                    if not len(raw_command) > 1:
+                    if not len(raw_command_split) > 1:
                         print("get [IDs]")
                         continue
 
-                    ids = [str(id) for id in raw_command[1:]]
+                    ids = [str(id) for id in raw_command_split[1:]]
                     
                     url = URL + "GetKey?ID="
                     query = '&ID='.join(ids)
                     url = url + query
-                    #print(url)
+                    
                     get_respose = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)
-                    print(get_respose.json())
+                    res_json = get_respose.json()
+
+                    i = 0 
+                    for obj in res_json:
+                        #print(obj)
+                        i = i + 1
+                        try:
+                            print("ID: " + obj['ID'] 
+                                  + ", Name: " + obj['Name'] 
+                                  + ", Key: " + obj['Key']
+                                  + ", Tokens: " + str(obj['Tokens']))
+                        except:
+                            print("ID: " + raw_command_split[i] 
+                                  + ", Error: "+ obj['body'] 
+                                  + ", statuscode: " + str(obj['statusCode']))
 
                     # TODO: present data 
 
@@ -70,17 +86,19 @@ def main():
 # -------------------------CREATE-----------------------------                
                 case "create":
                     url = URL + "CreateKey"
-                    if not len(raw_command) > 1:
+                    if not len(raw_command_split) > 1:
                         print("create [ID:NAME]")
+                        print("EXAMPLE: create T1:some name, T2:some other name")
                         continue
 
-                    ids = [str(id) for id in raw_command[1:]]
+                    ids = raw_command[7:].split(', ')
                     
                     raw_payload = []
                     for id in ids:
                         nro, name = id.split(':')
                         raw_payload.append({"ID":nro, "Name":name})
                     payload = json.dumps(raw_payload)
+                    #print(payload)
                     
                     create_respose = requests.request("POST", url, headers=HEADERS, data=payload)
                     print(create_respose.json())
@@ -90,18 +108,18 @@ def main():
  # -------------------------DELETE-----------------------------
                 case "delete":
                     url = URL + "DeleteKey"
-                    if not len(raw_command) > 1:
+                    if not len(raw_command_split) > 1:
                         print("delete [ID]")
                         continue
                     
-                    ids = [str(id) for id in raw_command[1:]]
+                    ids = [str(id) for id in raw_command_split[1:]]
                     
                     raw_payload = []
                     for id in ids:
                         raw_payload.append({"ID":id})
                     payload = json.dumps(raw_payload)
 
-                    delete_respose = requests.request("POST", url, headers=HEADERS, data=payload)
+                    delete_respose = requests.request("DELETE", url, headers=HEADERS, data=payload)
                     print(delete_respose.json())
 
                     # TODO: present data 
@@ -109,11 +127,11 @@ def main():
 # -------------------------SETAPI-----------------------------
                 case "setapi":
                     url = URL + "ApiState"
-                    if not len(raw_command) == 2:
+                    if not len(raw_command_split) == 2:
                         print("setapi ON/OFF")
                         continue
 
-                    set_param = raw_command[1]
+                    set_param = raw_command_split[1]
                     set_param = str(set_param).upper()
 
                     if not set_param == "ON" and not set_param == "OFF":
