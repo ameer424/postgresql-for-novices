@@ -5,6 +5,9 @@ from sqlglot import exp
 
 from .config_values import ConfigValues
 
+from .get_postre_schema import Postgre_schema
+#from .modelhelper import ModelHelper
+
 class SyntaxRouter:
     def __init__(
         self,
@@ -24,7 +27,16 @@ class SyntaxRouter:
         self.config_values: Optional[ConfigValues] = config_values
     
     
-    def run_analysis(self, sql_query: str) -> str:
-        tunnistus = "Ahaa, uusi syntax virhe löydetty."
-        täydennys = "\n tähän tulee LLM generoimat tilpehöörit"
-        return tunnistus + täydennys
+    def run_analysis(self, sql_error: str,sql_query: str) -> str:
+        """
+        Function that calls ModelHelper class with all the attributes it needs
+        Returns LLM answer to pg4n
+        """        
+        #if self.config_values.get("LambdaAddress") != None and self.config_values.get("APIKey") != None:
+        #    schema_address = "host=" + self.pg_host + " port=" + self.pg_port + " dbname="+ self.pg_name  + " user=" + self.pg_user
+        #    postgre_schema = Postgre_schema.get_postgre_schema(schema_address)
+        #    schema = "".join(str(line) for line in postgre_schema)
+        #    model_helper = ModelHelper(self.config_values.get("LambdaAddress"),self.config_values.get("APIKey"))
+        #    llm_answer = model_helper.send_request(sql_query, sql_error, schema)
+        #    return llm_answer       
+        return "Syntax Router Error: Missing user value(s)!!"

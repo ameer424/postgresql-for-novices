@@ -15,7 +15,6 @@ from pyte import Screen, Stream
 
 from .psqlparser import PsqlParser
 
-
 class PsqlWrapper:
     """Handles terminal interfacing with psql, using the parameter parser \
     to pick up relevant SQL statements and syntax errors for hook functions."""
@@ -114,6 +113,7 @@ class PsqlWrapper:
         :param output: output seen on terminal screen.
         :returns: output with injected semantic error messages.
         """
+        
         new_output: bytes = self._check_and_act_on_repl_output(output)
 
         self.pyte_screen_output_sink.feed(bytes.decode(new_output))
@@ -146,15 +146,17 @@ class PsqlWrapper:
 
         # User hit Return: parse for potential SQL query, analyze, and
         # save a potential warning to be included in before next fresh prompt.
+        
         if self._user_hit_return(latest_output):
             # get terminal screen contents
-            screen: str = "\n".join(line.rstrip() for line in self.pyte_screen.display)
-
-            parsed_sql_query: str = self.parser.parse_last_stmt(screen)
+            screen: str = "\n".join(line.rstrip() for line in self.pyte_screen.display)       
+            
+            parsed_sql_query: str = self.parser.parse_last_stmt(screen)            
             if parsed_sql_query != "":
                 # feed query to semantic analysis hook function
                 # and save resulting message
                 self.pg4n_message = self.semantic_analyze(parsed_sql_query)
+
 
         # If there is a fresh prompt:
         if self.parser.output_has_new_prompt(bytes.decode(latest_output)):
@@ -175,12 +177,16 @@ class PsqlWrapper:
                 line.rstrip() for line in potential_future_screen.display
             )
             syntax_error = self.parser.parse_syntax_error(potential_future_contents)
-            if syntax_error != "":
-                self.pg4n_message = self.syntax_analyze(syntax_error)
+
+            # when syntax appears parser will get the sql query and sends it with 
+            # syntax error to syntax_analyzer
+            if syntax_error != "":                
+                syntax_error_query = self.parser.parse_syntax_error_query(potential_future_contents)                                
+                self.pg4n_message = self.syntax_analyze(syntax_error,syntax_error_query)
                 new_output = self._replace_prompt(latest_output)
                 self.pg4n_message = ""
-                return new_output
-
+                return new_output        
+       
         return latest_output
 
     def _replace_prompt(self, prompt: bytes) -> bytes:

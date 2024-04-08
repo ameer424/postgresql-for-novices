@@ -13,6 +13,9 @@ class ConfigParser:
     )
     _empty_line_matcher: re.Pattern = re.compile(r"^\s*$")
     _comment_matcher: re.Pattern = re.compile(r"^\s*#+.*$")
+    # added patterns for syntax errors
+    _address_matcher: re.Pattern = re.compile(r"^\s*address:.*$")
+    _apikey_matcher: re.Pattern = re.compile(r"^\s*apikey:.*$")
 
     def __init__(self, file: TextIO):
         self.file: TextIO = file
@@ -23,7 +26,7 @@ class ConfigParser:
         """
 
         optnames = [x.lower() for x in ConfigValues.__annotations__.keys()]
-        config_values: ConfigValues = {}
+        config_values: ConfigValues = {}        
 
         # Needed for bytes containing files
         self.file.seek(0)
@@ -43,6 +46,18 @@ class ConfigParser:
             if isinstance(line, bytes):
                 line = bytes.decode(line, "utf-8")
             line = str(line)
+
+            # if address is found, add it to config_values
+            if match := ConfigParser._address_matcher.match(line):                
+                address = line[8:].strip()
+                config_values["LambdaAddress"] = address
+                continue
+
+            # if apikey is found, add it to config_values
+            if match := ConfigParser._apikey_matcher.match(line):                
+                apikey = line[7:].strip()
+                config_values["APIKey"] = apikey
+                continue
 
             if match := ConfigParser._empty_line_matcher.match(line):
                 continue

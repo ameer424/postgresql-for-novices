@@ -46,7 +46,7 @@ class PsqlConnInfo:
         pexpect_conninfo.expect(pexpect.EOF)
         conninfo_str = bytes.decode(pexpect_conninfo.before)
         try:
-            conninfo_res = match_psql_conninfo.parse_string(conninfo_str).as_list()
+            conninfo_res = match_psql_conninfo.parse_string(conninfo_str).as_list()            
         except ParseException:
             return
         self.pg_host = conninfo_res[5]
