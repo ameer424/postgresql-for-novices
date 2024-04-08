@@ -31,14 +31,12 @@ class SyntaxRouter:
         """
         Function that calls ModelHelper class with all the attributes it needs
         Returns LLM answer to pg4n
-        """
-        
-        #if self.config_values != None:
+        """        
+        #if self.config_values.get("LambdaAddress") != None and self.config_values.get("APIKey") != None:
         #    schema_address = "host=" + self.pg_host + " port=" + self.pg_port + " dbname="+ self.pg_name  + " user=" + self.pg_user
         #    postgre_schema = Postgre_schema.get_postgre_schema(schema_address)
         #    schema = "".join(str(line) for line in postgre_schema)
-        #    model_helper = ModelHelper(self.config_values.get("LambdaAddress"))
+        #    model_helper = ModelHelper(self.config_values.get("LambdaAddress"),self.config_values.get("APIKey"))
         #    llm_answer = model_helper.send_request(sql_query, sql_error, schema)
-        #    return llm_answer         
-        #return "Error: No lambda key!!"
-        return ""
+        #    return llm_answer       
+        return "Syntax Router Error: Missing user value(s)!!"
