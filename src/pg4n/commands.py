@@ -9,7 +9,7 @@ from .config_values import ConfigValues
 
 
 USER_COMMANDS = ["help", "address", "apikey", "exit"]
-ADMIN_COMMANDS =  ["All user commands +", "get", "create", "delete", "setapi","setparams","getparams"]
+ADMIN_COMMANDS =  ["All user commands +", "get", "create", "delete", "setapi","setparams","getparams", "createkeysfromcsv"]
 HELP_TEXT = "All user commands are 1 liners. COMMAND + 1 SPACE + VALUE\Some admin commands aren't."
 CONFIG_FILE_NAME = "pg4n.conf"
 USERS_FILE_NAME = "pg4n_users.json"
