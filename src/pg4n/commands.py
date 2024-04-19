@@ -114,13 +114,7 @@ def main():
         
     if config_values.get("LambdaAddress") is not None:
         print("Address loaded from file.")
-        URL = config_values.get("LambdaAddress")
-
-    config_values["LambdaAddress"] = "https://rb7711t55l.execute-api.us-east-1.amazonaws.com/"    
-    URL = config_values.get("LambdaAddress")
-    config_values["APIKey"] = "example_master_key_123"
-    HEADERS = {'x-api-key': config_values.get("APIKey"),
-               'Content-Type': 'application/json'}
+        URL = config_values.get("LambdaAddress")   
     
     
     while(True):
