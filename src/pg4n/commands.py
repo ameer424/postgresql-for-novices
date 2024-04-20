@@ -1,13 +1,15 @@
 # Admin functionality and control of pg4n cloud implementations.
 import json
 import os
+import csv
 import os.path
 import requests
 from .config_reader import ConfigReader
 from .config_values import ConfigValues
 
+
 USER_COMMANDS = ["help", "address", "apikey", "exit"]
-ADMIN_COMMANDS =  ["All user commands +", "get", "create", "delete", "setapi","setparams","getparams"]
+ADMIN_COMMANDS =  ["All user commands +", "get", "create", "delete", "setapi","setparams","getparams", "createkeysfromcsv"]
 HELP_TEXT = "All user commands are 1 liners. COMMAND + 1 SPACE + VALUE\Some admin commands aren't."
 CONFIG_FILE_NAME = "pg4n.conf"
 USERS_FILE_NAME = "pg4n_users.json"
@@ -87,6 +89,37 @@ def fileIO(file_value, input_value):
         
     print( file_value[:-1].capitalize() + " added!")
     return (True,input_value) 
+
+def read_csv(filename):
+    """
+    Reads a CSV file with two columns.
+
+    Args:
+        filename: The path to the CSV file.
+
+    Returns:
+        A list of lists, where each inner list represents a row in the CSV file.
+        On error, returns None.
+    """
+    try:
+        # Open the CSV file in read mode
+        with open(filename, 'r') as csvfile:
+            # Create a CSV reader object
+            reader = csv.reader(csvfile)
+
+            # Read the data into a list of lists
+            data = []
+            for row in reader:
+                # Check if the row has exactly two columns
+                nro, name = row[0].split(';')
+                if nro.strip() != "" and name.strip() != "":
+                    data.append({"id":nro.strip(), "name":name.strip()})
+            print(data)
+            return data
+    except FileNotFoundError:
+        print(f"Error: File '{filename}' not found")
+    except ValueError as e:
+        print(f"Error reading CSV: {e}")
 
 def main():
     """
@@ -331,8 +364,24 @@ def main():
                             + ", \nPrompt: " + res_json['ModelInstructions'])
                     else:
                              res_json = get_parameters_response.json()
-                             print(res_json)                                       
+                             print(res_json)
+# ---------------------------CREATEKEYSFROMCSV-------------------------
 
+                case "createkeysfromcsv":
+                    print("\nGive new parameters.")
+
+                    file_full_path = read_input(str,"CSV file full path: ","String")
+                    raw_payload = read_csv(file_full_path)
+
+                    url = URL + "createKeys"
+
+                    payload = json.dumps(raw_payload)                    
+                        
+                    create_response = requests.request("POST", url, headers=HEADERS, data=payload)
+                    res_json = create_response.json()
+    
+                    for obj in res_json:
+                        print_response_json(obj)
 # -------------------------NOCASE-----------------------------
                 case _:
                     if not value_not_in_file_error:
