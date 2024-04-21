@@ -8,12 +8,40 @@ from .config_reader import ConfigReader
 from .config_values import ConfigValues
 
 
-USER_COMMANDS = ["help", "address", "apikey", "exit"]
-ADMIN_COMMANDS =  ["All user commands +", "get", "create", "delete", "setapi","setparameters","getparameters", "createkeysfromcsv"]
-HELP_TEXT = "Work in progress"
+USER_COMMANDS = "help, address, apikey, exit"
+ADMIN_COMMANDS =  "All user commands + get, create, delete, setapi, setparameters, getparameters, createkeysfromcsv"
+HELP_TEXT = ("User commands: help, address, apikey, exit. Admin can also use these.\n"
+            "help: shows help page.\n"
+            "example use: help\n"
+            "address command to set or change LambdaAddres that is needed to use syntax error help.\n"
+            "example use: address https://someaddress.amazonaws.com/\n"
+            "apikey: command set or change users apikey that identifies user.\n"
+            "example use: apikey kl3477k54kl54lk345kl54lk54kl45kl\n"
+            "exit: command to exit program.\n"
+            "example use: exit\n\n"
+            "Admin commands: get, create, delete, setapi, setparameters, getparameters, createkeysfromcsv\n"
+            "get: command to get users from database. Can be used to get users by ID or to get all users.\n"           
+            "create: command to create new user or users and add them to database.\n"
+            "delete: command to delete user or users from database.\n"
+            "setapi: command to set api ON or OFF.\n"
+            "setparameters: command to change LLM parameters.\n"
+            "getparameters: command to get LLM parameters.\n"
+            "createkeysfromcsv: command to add users from file.\n"            
+            )
 CONFIG_FILE_NAME = "pg4n.conf"
 
 def all_responces_and_print(responce):
+    """
+    Function to check responces http code and
+    continue accordingly. Also catches error if
+    something weird happens.
+
+    This function is used: get, delete and both create
+    paths.
+
+    Args:
+        responce: http responce. 
+    """
     try:
         if responce.status_code == 200:
             res_json = responce.json()                                           
@@ -28,11 +56,24 @@ def all_responces_and_print(responce):
         print("Something went wrong!")
 
 def read_list_input(input_type):
+    """
+    Function that reads inputs on user returns list of wanted
+    strings.
+
+    This function is used: create, get and delete paths.
+
+    Args:
+        input_type: what is functions call location.
+
+    Returns:
+            List of inputs or empty list.
+
+    """
     inputs = []
     count = 1
-    if input_type == "create":
-        print("Add 1 ID at time. Leave empty to stop.")
-        print("Name is asked in secondline.")
+    print("Add 1 ID at time. Leave empty to stop.")
+    if input_type == "create":        
+        print("Name is asked in secondline, after enter.")
         while True:        
             id_value = input(str(count) + ". ID: ")        
             if id_value == "":
@@ -40,8 +81,7 @@ def read_list_input(input_type):
             name_value = input(str(count) + ". Name: ")            
             inputs.append({"id":id_value.strip(), "name":name_value.strip()})
             count = count + 1
-    else:
-        print("Add 1 ID at time. Leave empty to stop.")
+    else:        
         while True:        
             input_value = input(str(count) + ". ID: ")        
             if input_value == "":
@@ -51,6 +91,19 @@ def read_list_input(input_type):
     return inputs
 
 def read_input(expected_input_type,input_text,error):
+    """
+    This function reads parameter input and return
+    it in expected format.
+
+    Args:
+        expected_input_type: What type of input is expected from user
+        string, float or integer.
+        input_text: String text what tells what value is this time. 
+        error: error text to user that tells what type th input should be.
+    
+        Returns:
+                Expected type input value or empty string.
+    """
     while True:                  
         input_value = input(input_text)
         try:
@@ -60,7 +113,15 @@ def read_input(expected_input_type,input_text,error):
         except:
             print("Input type is wrong! Needs to be " + error +". Try again!")        
 
-def print_response_json(obj):    
+def print_response_json(obj):
+    """
+    Printing function for get delete and both create functions.
+    First if clause is if http is not 200 and is just error message.
+    In else after http 200 full info is printed for 1 user in database.
+
+    Args:
+        object: containing 1 line of data
+    """    
     try:
         if 'message' in obj:
             print(obj['message'])
@@ -72,7 +133,18 @@ def print_response_json(obj):
     except:        
         print("Something went wrong!")
 
-def fileIO(file_value, input_value):   
+def fileIO(file_value, input_value):
+    """
+    Function handling saving Apikey or Lambdaaddres to file or
+    replacing old to new.
+    Args:
+        file_value: string that has "address" or "apikey" text in it.
+        input_value: string that has address or apikey value in it
+    
+    Returns:
+            tuple with first argument success or failure and second
+            the input value if not failure. If fails empty string.
+    """  
 
     cwd = os.getcwd()
 
@@ -200,12 +272,7 @@ def main():
                 command = ""
 
             match command:
-                case "help":
-                    print("")                                       
-                    print("User commands: ")
-                    print(USER_COMMANDS)                    
-                    print("Admin commands: ")
-                    print(ADMIN_COMMANDS)
+                case "help":                    
                     print("")
                     print(HELP_TEXT)                                     
                     # ask for additional parameters here.
@@ -217,6 +284,7 @@ def main():
 
 # -----------------------APIKEY-----------------------------
                 case "apikey":
+                    # command should be has 2 "words" and second is the actual key
                     if not len(raw_command_split) == 2:
                         print("apikey APIKEY_WANTED_TO_BE_SAVE")
                         continue
@@ -228,6 +296,7 @@ def main():
 
 # ----------------------ADDRESS-----------------------------
                 case "address":
+                    # command should be has 2 "words" and second is the actual address
                     if not len(raw_command_split) == 2:
                         print("address ADDRESS_WANTED_TO_BE_SAVE")
                         continue

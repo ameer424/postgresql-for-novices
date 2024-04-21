@@ -5,6 +5,9 @@ class ModelHelper:
     """
     This class is responsible for sending messages to lambda functions and 
     for handling the answer.
+
+    Returns:
+            LLM:s message or error message
     """
     def __init__(self, lambda_url, apikey):
         self.lambda_url = lambda_url + "readFromModel"
@@ -22,7 +25,8 @@ class ModelHelper:
         
         headers = {'Content-Type': 'application/json',
                    'x-api-key': self.apikey}
-               
+
+        # Check if http responce 200 or something else.       
         response = requests.post(self.lambda_url, headers=headers, data=json.dumps(body))
         if response.status_code == 200:
             return (True,json.loads(response.text)["model_response"])        

@@ -31,6 +31,15 @@ class SyntaxRouter:
         """
         Function that calls ModelHelper class with all the attributes it needs
         Returns LLM answer to pg4n
+        If config values is None there is no LambdaAdddres and Apikey loaded in startup
+        There is individual check for both also.
+
+        Args:
+            sql_error: syntax error message ready to sent LLM
+            sql_query: users sql query ready to sent LLM
+
+        Return:
+                LLM answer or error message
         """
         if self.config_values is not None:  
             if self.config_values.get("LambdaAddress") is not None and self.config_values.get("APIKey") is not None:
