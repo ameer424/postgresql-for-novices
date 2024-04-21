@@ -21,7 +21,10 @@ class ModelHelper:
         }
         
         headers = {'Content-Type': 'application/json',
-                   'x-api-key': self.apikey}        
+                   'x-api-key': self.apikey}
+               
         response = requests.post(self.lambda_url, headers=headers, data=json.dumps(body))
-        return json.loads(response.text)["model_response"] 
+        if response.status_code == 200:
+            return (True,json.loads(response.text)["model_response"])        
+        return (False,response.json()) 
     

@@ -9,21 +9,45 @@ from .config_values import ConfigValues
 
 
 USER_COMMANDS = ["help", "address", "apikey", "exit"]
-ADMIN_COMMANDS =  ["All user commands +", "get", "create", "delete", "setapi","setparams","getparams", "createkeysfromcsv"]
-HELP_TEXT = "All user commands are 1 liners. COMMAND + 1 SPACE + VALUE\Some admin commands aren't."
+ADMIN_COMMANDS =  ["All user commands +", "get", "create", "delete", "setapi","setparameters","getparameters", "createkeysfromcsv"]
+HELP_TEXT = "Work in progress"
 CONFIG_FILE_NAME = "pg4n.conf"
-USERS_FILE_NAME = "pg4n_users.json"
 
-def read_list_input():
+def all_responces_and_print(responce):
+    try:
+        if responce.status_code == 200:
+            res_json = responce.json()                                           
+            for obj in res_json:
+                print_response_json(obj)
+        elif responce.status_code == 500:
+            print("Enexpected error.")
+        else:
+            res_json = responce.json()        
+            print(res_json["message"])
+    except:
+        print("Something went wrong!")
+
+def read_list_input(input_type):
     inputs = []
     count = 1
-    print("Add 1 ID at time. Leave empty to stop.")
-    while True:        
-        input_value = input(str(count) + ". ID: ")        
-        if input_value == "":
-            break
-        inputs.append(input_value)
-        count = count + 1
+    if input_type == "create":
+        print("Add 1 ID at time. Leave empty to stop.")
+        print("Name is asked in secondline.")
+        while True:        
+            id_value = input(str(count) + ". ID: ")        
+            if id_value == "":
+                break
+            name_value = input(str(count) + ". Name: ")            
+            inputs.append({"id":id_value.strip(), "name":name_value.strip()})
+            count = count + 1
+    else:
+        print("Add 1 ID at time. Leave empty to stop.")
+        while True:        
+            input_value = input(str(count) + ". ID: ")        
+            if input_value == "":
+                break
+            inputs.append(input_value.strip())
+            count = count + 1
     return inputs
 
 def read_input(expected_input_type,input_text,error):
@@ -46,7 +70,7 @@ def print_response_json(obj):
                 + ", Key: " + obj['Key']
                 + ", Tokens: " + str(obj['Tokens']))        
     except:        
-        print("Missing value in responce!")
+        print("Something went wrong!")
 
 def fileIO(file_value, input_value):   
 
@@ -163,7 +187,7 @@ def main():
                 raw_command_split = raw_command.split()
                 command = raw_command_split[0]
 
-            if command != "apikey" and command != "address" and command != 'exit':
+            if command != "apikey" and command != "address" and command != 'exit' and command != 'help':
                 if config_values.get("LambdaAddress") is None:
                     print("Error: Address not set!!")
                     value_not_in_file_error = True
@@ -215,83 +239,64 @@ def main():
 # -------------------------GET-----------------------------
                 case "get":
                     makeHttp = True
-                    #if not len(raw_command_split) > 1:
-                    #    print("get [IDs]")
-                    #    continue
+                    
                     if len(raw_command_split) == 2 and raw_command_split[1] == "all":
                         url = URL + "getAllKeys"
                     else:
-                        readed_inputs = read_list_input()
+                        readed_inputs = read_list_input("get")
                         if len(readed_inputs) > 0:                   
-                            ids = [str(id) for id in readed_inputs] 
-                            #ids = [str(id) for id in raw_command_split[1:]]                        
+                            ids = [str(id) for id in readed_inputs]                                                
                             url = URL + "getKeys?id="
                             query = ','.join(ids)
                             url = url + query
                         else:
-                            makeHttp = False                   
+                            makeHttp = False
+                            print("No ID:s to GET!")                  
                     if makeHttp:                        
-                        get_response = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)
-                        
-                        res_json = get_response.json()                   
-                                            
-                        for obj in res_json:
-                            print_response_json(obj)
-                    else:
-                        print("No ID:s to get!")                               
-                
+                        get_response = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)                        
+                        all_responces_and_print(get_response)   
+              
 # -------------------------CREATE-----------------------------                
                 case "create":
                     makeHttp = True
                     url = URL + "createKeys"
-                    if not len(raw_command_split) > 1:
-                        print("create [ID:NAME]")
-                        print("EXAMPLE: create T1:some name, T2:some other name")
-                        continue
-
-                    ids = raw_command[7:].split(', ')
-                    
                     raw_payload = []
-                    for id in ids:
-                        nro, name = id.split(':')
-                        if nro == "":
-                            print("Student ID is missing. Aborting create!")
-                            makeHttp = False
-                            break
-                        if name == "":
-                            print("Student name is missing Aborting create!")
-                            makeHttp = False
-                            break
-                        raw_payload.append({"id":nro.strip(), "name":name.strip()})
-
+                    readed_inputs = read_list_input("create")
+                    if len(readed_inputs) == 0:                 
+                        makeHttp = False
+                        print("No user:s to CREATE!")                 
+                          
                     if makeHttp:
-                        payload = json.dumps(raw_payload)                    
+                        payload = json.dumps(readed_inputs)                    
                         
                         create_response = requests.request("POST", url, headers=HEADERS, data=payload)
-                        res_json = create_response.json()
+                        all_responces_and_print(create_response)
+                        #res_json = create_response.json()
     
-                        for obj in res_json:
-                            print_response_json(obj)
+                        #for obj in res_json:
+                        #    print_response_json(obj)
                     
 
  # -------------------------DELETE-----------------------------
                 case "delete":
-                    url = URL + "deleteKeys?id="
-                    if not len(raw_command_split) > 1:
-                        print("delete [ID]")
-                        continue   
-
-                    ids = [str(id) for id in raw_command_split[1:]]
-                        
-                    url = URL + "deleteKeys?id="
-                    query = ','.join(ids)
-                    url = url + query                   
-
-                    delete_respose = requests.request("DELETE", url, headers=HEADERS, data=PAYLOAD)
-                    res_json = delete_respose.json()
+                    makeHttp = True
+                    url = URL + "deleteKeys?id="                    
                     
-                    for obj in res_json:
-                        print_response_json(obj) 
+                    readed_inputs = read_list_input("delete")
+                    if len(readed_inputs) > 0:
+                        ids = [str(id) for id in readed_inputs]
+                            
+                        url = URL + "deleteKeys?id="
+                        query = ','.join(ids)
+                        url = url + query                   
+
+                        delete_response = requests.request("DELETE", url, headers=HEADERS, data=PAYLOAD)                        
+                    else:
+                        makeHttp = False
+                        print("No ID:s to DELETE!")
+
+                    if makeHttp:
+                        all_responces_and_print(delete_response)                        
 
 # --------------------------SETAPI-----------------------------
                 case "setapi":                    
@@ -311,10 +316,16 @@ def main():
                     payload = json.dumps(raw_payload)
 
                     setapi_response = requests.request("POST", url, headers=HEADERS, data=payload)
-                    print(setapi_response.json())
+                    if setapi_response.status_code == 200:
+                        print(setapi_response.json())
+                    elif setapi_response.status_code == 500:
+                        print("Unexpected error.")
+                    else:                        
+                        res_json = setapi_response.json()
+                        print(res_json["message"])       
 
 # ---------------------SETPARAMETERS--------------------------
-                case "setparams":
+                case "setparameters":
                     print("\nGive new parameters. Leave empty if no new value.")
                     
                     input_responce_length = read_input(int,"Responce length: ","Integer")
@@ -347,12 +358,14 @@ def main():
                                 + ", \nTemperature: " + str(res_json['temperature'])
                                 + ", \nTopP: " + str(res_json['topP'])
                                 + ", \nPrompt: " + res_json['ModelInstructions'])
+                        elif set_parameters_response.status_code == 500:
+                            print("Unexpected error.")
                         else:
-                             res_json = set_parameters_response.json()
-                             print(res_json)       
+                            res_json = set_parameters_response.json()
+                            print(res_json["message"])       
 
 # ---------------------GETPARAMETERS--------------------------
-                case "getparams":
+                case "getparameters":
                     url = URL + "parameters"
 
                     get_parameters_response = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)
@@ -362,9 +375,12 @@ def main():
                             + ", \nTemperature: " + res_json['temperature']
                             + ", \nTopP: " + res_json['topP']
                             + ", \nPrompt: " + res_json['ModelInstructions'])
+                    elif get_parameters_response.status_code == 500:
+                        print("Unexpected error.")
                     else:
-                             res_json = get_parameters_response.json()
-                             print(res_json)
+                        res_json = get_parameters_response.json()
+                        print(res_json["message"])
+
 # ---------------------------CREATEKEYSFROMCSV-------------------------
 
                 case "createkeysfromcsv":
@@ -378,10 +394,8 @@ def main():
                     payload = json.dumps(raw_payload)                    
                         
                     create_response = requests.request("POST", url, headers=HEADERS, data=payload)
-                    res_json = create_response.json()
-    
-                    for obj in res_json:
-                        print_response_json(obj)
+                    all_responces_and_print(create_response)
+                    
 # -------------------------NOCASE-----------------------------
                 case _:
                     if not value_not_in_file_error:
