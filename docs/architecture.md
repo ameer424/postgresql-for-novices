@@ -4,6 +4,26 @@
 
 ## Backend
 
+### Commands
+
+Commands.py has a main-function that can be started by any user with command: "poetry run python -m src.pg4n.commands". Commands is a class that is simply used for configurations of the environment. When started, Commands creates an infinite loop that keeps running until user give command to exit. All commands are available to the admin user but only some for reqular user. 
+
+Reqular commands:
+help - prints out all commands that can be used. Separates them to admin and reqular commands
+address <url> - Configures pg4n to send Api-requests to specified URL.
+apikey <your_apikey> - Adds users apikey to configuration file.
+exit - Shuts down the application.
+
+Admin commands:
+get (<list_of_ids> or "all") - Finds the users by their ids or returns all users.
+create <list_of_id_and_name_pairs> - Creates users for given ids and names. Id can be for example student number/id used in school.
+delete <list_of_ids> - Deletes users with given ids.
+setapi <ON_or_OFF> - Sets Api's availability. If defined ON, users can send their requests. If set OFF, requests can not be sent.
+setparams - Is used for setting parameters of the LLM. After giving command setparams, user is asked to give values for each parameter. Those parameters left blank wil not be modified.
+getparams - Prints out the current parameters of the LLM.
+
+In case an invalid argument is given, system alerts that command isn't found and then lists all possible commands.
+
 ### ErrorFormatter
 Unified error formatting.
 Each Checker class must use this to format their warning messages.
@@ -19,6 +39,17 @@ See API docs.
 ### SemanticRouter
 
 Runs SQLParser, QEPParser and semantic error analysis modules (as configured) against given SQL query string.
+
+
+### SyntaxRouter
+
+Class that is called when PostgreSQL gives a syntax error. When initialized, it gets users psql info: port, host, user, password and name and in addition optional configuration values. 
+
+Run_analysis function gets the psql error message and the query as strings. Then it fetches the schema. SyntgaxRouter then creates an ModelHelper-object and uses it to send the request and getting the response-body.
+
+### ModelHelper
+Sends the Api-requests and receives them. Gets the url to lambda-function when the class is  initialized. In send_request function, the modelhelper gets the sql-query, errormessage and schema as parameters. It will send the parameters to the Api in reuqestbody. After sending the request it receives the response and returns the response it received.
+
 
 ### SQLParser
 
