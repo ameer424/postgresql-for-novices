@@ -52,19 +52,19 @@ Prompt = If you are not happy with the provided answers you can try to modify th
 #### All commands
 
 Reqular commands:
-help - prints out all commands that can be used. Separates them to admin and reqular commands
-address <url> - Configures pg4n to send Api-requests to specified URL.
-apikey <your_apikey> - Adds users apikey to configuration file.
-exit - Shuts down the application.
+help - prints out all commands that can be used. Separates them to admin and reqular commands  
+address <url> - Configures pg4n to send Api-requests to specified URL.  
+apikey <your_apikey> - Adds users apikey to configuration file.  
+exit - Shuts down the application.  
 
 Admin commands:
-get (<list_of_ids> or "all") - Finds the users by their ids or find all users.
-create <list_of_id_and_name_pairs> - Creates users for given ids and names. Id can be for example student number/id used in school.
-createkeysfromcsv - Give a csv-file with two columns and semicolon as separator. First column should be for ids and second column for names.
-delete <list_of_ids> - Deletes users with given ids.
-setapi <ON_or_OFF> - Sets Api's availability. If defined ON, users can send their requests. If set OFF, requests can not be sent.
-setparams - Is used for setting parameters of the LLM. After giving command setparams, user is asked to give values for each parameter. Those parameters left blank wil not be modified.
-getparams - Prints out the current parameters of the LLM.
+get (<list_of_ids> or "all") - Finds the users by their ids or find all users.  
+create <list_of_id_and_name_pairs> - Creates users for given ids and names. Id can be for example student number/id used in school.  
+createkeysfromcsv - Give a csv-file with two columns and semicolon as separator. First column should be for ids and second column for names.  
+delete <list_of_ids> - Deletes users with given ids.  
+setapi <ON_or_OFF> - Sets Api's availability. If defined ON, users can send their requests. If set OFF, requests can not be sent.  
+setparams - Is used for setting parameters of the LLM. After giving command setparams, user is asked to give values for each parameter. Those parameters left blank wil not be modified.  
+getparams - Prints out the current parameters of the LLM.  
 
 ### Running Pg4n
 
