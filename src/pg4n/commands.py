@@ -239,12 +239,15 @@ def make_csv(response):
             # get path to save file
             cwd = os.getcwd()
             home_config_path = cwd + "/" + SAVE_FILE
-            # save all data to file           
-            with open(home_config_path, "w") as config_file:
-                config_file.write("\n".join(data) + "\n")
-            config_file.close()
-            # inform user that saving happened
-            print("Users saved tofile: users.csv")
+            # save all data to file
+            if len(data) > 1:          
+                with open(home_config_path, "w") as config_file:
+                    config_file.write("\n".join(data) + "\n")
+                config_file.close()
+                # inform user that saving happened
+                print("Users saved tofile: users.csv")
+            else:
+                print("Database was empty no users saved.")
         elif response.status_code == 500:
             print("Unexpected error.")
             
