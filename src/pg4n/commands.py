@@ -29,8 +29,9 @@ HELP_TEXT = ("User commands: help, address, apikey, exit. Admin can also use the
             "createkeysfromcsv: command to add users from file.\n"            
             )
 CONFIG_FILE_NAME = "pg4n.conf"
+SAVE_FILE = "users.csv"
 
-def all_responces_and_print(responce):
+def all_responces_and_print(response):
     """
     Function to check responces http code and
     continue accordingly. Also catches error if
@@ -43,14 +44,14 @@ def all_responces_and_print(responce):
         responce: http responce. 
     """
     try:
-        if responce.status_code == 200:
-            res_json = responce.json()                                           
+        if response.status_code == 200:
+            res_json = response.json()
             for obj in res_json:
                 print_response_json(obj)
-        elif responce.status_code == 500:
-            print("Enexpected error.")
+        elif response.status_code == 500:
+            print("Unexpected error.")
         else:
-            res_json = responce.json()        
+            res_json = response.json()
             print(res_json["message"])
     except:
         print("Something went wrong!")
@@ -169,7 +170,7 @@ def fileIO(file_value, input_value):
 
             with open(home_config_path, "w") as config_file:
                 config_file.write("\n".join(file_lines) + "\n") 
-
+            config_file.close()
         except Exception as e:
             print("An error occurred:", e)
             return (False,"")                 
@@ -178,7 +179,7 @@ def fileIO(file_value, input_value):
         try:
             with open(home_config_path, "w") as config_file:
                 config_file.write(file_value + input_value )
-
+            config_file.close()
         except Exception as e:
             print("An error occurred:", e)
             return (False,"")
@@ -217,6 +218,42 @@ def read_csv(filename):
     except ValueError as e:
         print(f"Error reading CSV: {e}")
 
+def make_csv(response):
+    """
+    Function that makes users.csv file with all users in database.
+    File is always overwritten if it is allready made.
+
+    Args:
+        response: http responce that includes users
+    """
+    try:
+        #check responce status
+        if response.status_code == 200:            
+            data = []
+            res_json = response.json()
+            # add column headings
+            data.append("ID"+";"+"Name"+";"+"Key"+";"+"Tokens")
+            # iterate responce json and save data in csv format        
+            for obj in res_json:
+                data.append(obj['ID']+";"+obj['Name']+";"+obj['Key']+";"+str(obj['Tokens']))
+            # get path to save file
+            cwd = os.getcwd()
+            home_config_path = cwd + "/" + SAVE_FILE
+            # save all data to file           
+            with open(home_config_path, "w") as config_file:
+                config_file.write("\n".join(data) + "\n")
+            config_file.close()
+            # inform user that saving happened
+            print("Users saved tofile: users.csv")
+        elif response.status_code == 500:
+            print("Unexpected error.")
+            
+        else:
+            res_json = response.json()
+            print(res_json["message"])            
+    except:
+        print("Something went wrong!")        
+    
 def main():
     """
     Starts an infinite while loop that asks the admin for commands.
@@ -308,9 +345,12 @@ def main():
 # -------------------------GET-----------------------------
                 case "get":
                     makeHttp = True
-                    
+                    toFile = False
                     if len(raw_command_split) == 2 and raw_command_split[1] == "all":
                         url = URL + "getAllKeys"
+                    elif len(raw_command_split) == 2 and raw_command_split[1] == "tofile":
+                        url = URL + "getAllKeys"
+                        toFile = True
                     else:
                         readed_inputs = read_list_input("get")
                         if len(readed_inputs) > 0:                   
@@ -322,8 +362,14 @@ def main():
                             makeHttp = False
                             print("No ID:s to GET!")                  
                     if makeHttp:                        
-                        get_response = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)                        
-                        all_responces_and_print(get_response)   
+                        get_response = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)                       
+                        if toFile:
+                            try:
+                                make_csv(get_response)            
+                            except Exception as e:
+                                print("An error occurred:", e)
+                        else:
+                            all_responces_and_print(get_response)                                
               
 # -------------------------CREATE-----------------------------                
                 case "create":
@@ -339,12 +385,7 @@ def main():
                         payload = json.dumps(readed_inputs)                    
                         
                         create_response = requests.request("POST", url, headers=HEADERS, data=payload)
-                        all_responces_and_print(create_response)
-                        #res_json = create_response.json()
-    
-                        #for obj in res_json:
-                        #    print_response_json(obj)
-                    
+                        all_responces_and_print(create_response)                    
 
  # -------------------------DELETE-----------------------------
                 case "delete":
