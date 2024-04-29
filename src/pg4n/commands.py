@@ -8,25 +8,103 @@ from .config_reader import ConfigReader
 from .config_values import ConfigValues
 
 
-USER_COMMANDS = ["help", "address", "apikey", "exit"]
-ADMIN_COMMANDS =  ["All user commands +", "get", "create", "delete", "setapi","setparams","getparams", "createkeysfromcsv"]
-HELP_TEXT = "All user commands are 1 liners. COMMAND + 1 SPACE + VALUE\Some admin commands aren't."
+USER_COMMANDS = "help, address, apikey, exit"
+ADMIN_COMMANDS =  "All user commands + get, create, delete, setapi, setparameters, getparameters, createkeysfromcsv"
+HELP_TEXT = ("User commands: help, address, apikey, exit. Admin can also use these.\n"
+            "help: shows help page.\n"
+            "example use: help\n"
+            "address command to set or change LambdaAddres that is needed to use syntax error help.\n"
+            "example use: address https://someaddress.amazonaws.com/\n"
+            "apikey: command set or change users apikey that identifies user.\n"
+            "example use: apikey kl3477k54kl54lk345kl54lk54kl45kl\n"
+            "exit: command to exit program.\n"
+            "example use: exit\n\n"
+            "Admin commands: get, create, delete, setapi, setparameters, getparameters, createkeysfromcsv\n"
+            "get: command to get users from database. Can be used to get users by ID or to get all users.\n"           
+            "create: command to create new user or users and add them to database.\n"
+            "delete: command to delete user or users from database.\n"
+            "setapi: command to set api ON or OFF.\n"
+            "setparameters: command to change LLM parameters.\n"
+            "getparameters: command to get LLM parameters.\n"
+            "createkeysfromcsv: command to add users from file.\n"            
+            )
 CONFIG_FILE_NAME = "pg4n.conf"
-USERS_FILE_NAME = "pg4n_users.json"
+SAVE_FILE = "users.csv"
 
-def read_list_input():
+def all_responces_and_print(response):
+    """
+    Function to check responces http code and
+    continue accordingly. Also catches error if
+    something weird happens.
+
+    This function is used: get, delete and both create
+    paths.
+
+    Args:
+        responce: http responce. 
+    """
+    try:
+        if response.status_code == 200:
+            res_json = response.json()
+            for obj in res_json:
+                print_response_json(obj)
+        elif response.status_code == 500:
+            print("Unexpected error.")
+        else:
+            res_json = response.json()
+            print(res_json["message"])
+    except:
+        print("Something went wrong!")
+
+def read_list_input(input_type):
+    """
+    Function that reads inputs on user returns list of wanted
+    strings.
+
+    This function is used: create, get and delete paths.
+
+    Args:
+        input_type: what is functions call location.
+
+    Returns:
+            List of inputs or empty list.
+
+    """
     inputs = []
     count = 1
     print("Add 1 ID at time. Leave empty to stop.")
-    while True:        
-        input_value = input(str(count) + ". ID: ")        
-        if input_value == "":
-            break
-        inputs.append(input_value)
-        count = count + 1
+    if input_type == "create":        
+        print("Name is asked in secondline, after enter.")
+        while True:        
+            id_value = input(str(count) + ". ID: ")        
+            if id_value == "":
+                break
+            name_value = input(str(count) + ". Name: ")            
+            inputs.append({"id":id_value.strip(), "name":name_value.strip()})
+            count = count + 1
+    else:        
+        while True:        
+            input_value = input(str(count) + ". ID: ")        
+            if input_value == "":
+                break
+            inputs.append(input_value.strip())
+            count = count + 1
     return inputs
 
 def read_input(expected_input_type,input_text,error):
+    """
+    This function reads parameter input and return
+    it in expected format.
+
+    Args:
+        expected_input_type: What type of input is expected from user
+        string, float or integer.
+        input_text: String text what tells what value is this time. 
+        error: error text to user that tells what type th input should be.
+    
+        Returns:
+                Expected type input value or empty string.
+    """
     while True:                  
         input_value = input(input_text)
         try:
@@ -36,7 +114,15 @@ def read_input(expected_input_type,input_text,error):
         except:
             print("Input type is wrong! Needs to be " + error +". Try again!")        
 
-def print_response_json(obj):    
+def print_response_json(obj):
+    """
+    Printing function for get delete and both create functions.
+    First if clause is if http is not 200 and is just error message.
+    In else after http 200 full info is printed for 1 user in database.
+
+    Args:
+        object: containing 1 line of data
+    """    
     try:
         if 'message' in obj:
             print(obj['message'])
@@ -46,9 +132,20 @@ def print_response_json(obj):
                 + ", Key: " + obj['Key']
                 + ", Tokens: " + str(obj['Tokens']))        
     except:        
-        print("Missing value in responce!")
+        print("Something went wrong!")
 
-def fileIO(file_value, input_value):   
+def fileIO(file_value, input_value):
+    """
+    Function handling saving Apikey or Lambdaaddres to file or
+    replacing old to new.
+    Args:
+        file_value: string that has "address" or "apikey" text in it.
+        input_value: string that has address or apikey value in it
+    
+    Returns:
+            tuple with first argument success or failure and second
+            the input value if not failure. If fails empty string.
+    """  
 
     cwd = os.getcwd()
 
@@ -73,7 +170,7 @@ def fileIO(file_value, input_value):
 
             with open(home_config_path, "w") as config_file:
                 config_file.write("\n".join(file_lines) + "\n") 
-
+            config_file.close()
         except Exception as e:
             print("An error occurred:", e)
             return (False,"")                 
@@ -82,7 +179,7 @@ def fileIO(file_value, input_value):
         try:
             with open(home_config_path, "w") as config_file:
                 config_file.write(file_value + input_value )
-
+            config_file.close()
         except Exception as e:
             print("An error occurred:", e)
             return (False,"")
@@ -113,14 +210,54 @@ def read_csv(filename):
                 # Check if the row has exactly two columns
                 nro, name = row[0].split(';')
                 if nro.strip() != "" and name.strip() != "":
-                    data.append({"id":nro.strip(), "name":name.strip()})
-            print(data)
-            return data
+                    data.append({"id":nro.strip(), "name":name.strip()})            
+            return (True,data)
     except FileNotFoundError:
         print(f"Error: File '{filename}' not found")
+        return (False,"")
     except ValueError as e:
         print(f"Error reading CSV: {e}")
+        return (False,"")
 
+def make_csv(response):
+    """
+    Function that makes users.csv file with all users in database.
+    File is always overwritten if it is allready made.
+
+    Args:
+        response: http responce that includes users
+    """
+    try:
+        #check responce status
+        if response.status_code == 200:            
+            data = []
+            res_json = response.json()
+            # add column headings
+            data.append("ID"+";"+"Name"+";"+"Key"+";"+"Tokens")
+            # iterate responce json and save data in csv format        
+            for obj in res_json:
+                data.append(obj['ID']+";"+obj['Name']+";"+obj['Key']+";"+str(obj['Tokens']))
+            # get path to save file
+            cwd = os.getcwd()
+            home_config_path = cwd + "/" + SAVE_FILE
+            # save all data to file
+            if len(data) > 1:          
+                with open(home_config_path, "w") as config_file:
+                    config_file.write("\n".join(data) + "\n")
+                config_file.close()
+                # inform user that saving happened
+                print("Users saved tofile: users.csv")
+            else:
+                print("Database was empty no users saved.")
+        elif response.status_code == 500:
+            print("Unexpected error.")
+            
+        else:
+            res_json = response.json()
+            print(res_json["message"])            
+    except:
+        print("Something went wrong!")        
+    
 def main():
     """
     Starts an infinite while loop that asks the admin for commands.
@@ -163,7 +300,7 @@ def main():
                 raw_command_split = raw_command.split()
                 command = raw_command_split[0]
 
-            if command != "apikey" and command != "address" and command != 'exit':
+            if command != "apikey" and command != "address" and command != 'exit' and command != 'help':
                 if config_values.get("LambdaAddress") is None:
                     print("Error: Address not set!!")
                     value_not_in_file_error = True
@@ -176,12 +313,7 @@ def main():
                 command = ""
 
             match command:
-                case "help":
-                    print("")                                       
-                    print("User commands: ")
-                    print(USER_COMMANDS)                    
-                    print("Admin commands: ")
-                    print(ADMIN_COMMANDS)
+                case "help":                    
                     print("")
                     print(HELP_TEXT)                                     
                     # ask for additional parameters here.
@@ -193,6 +325,7 @@ def main():
 
 # -----------------------APIKEY-----------------------------
                 case "apikey":
+                    # command should be has 2 "words" and second is the actual key
                     if not len(raw_command_split) == 2:
                         print("apikey APIKEY_WANTED_TO_BE_SAVE")
                         continue
@@ -204,6 +337,7 @@ def main():
 
 # ----------------------ADDRESS-----------------------------
                 case "address":
+                    # command should be has 2 "words" and second is the actual address
                     if not len(raw_command_split) == 2:
                         print("address ADDRESS_WANTED_TO_BE_SAVE")
                         continue
@@ -215,83 +349,68 @@ def main():
 # -------------------------GET-----------------------------
                 case "get":
                     makeHttp = True
-                    #if not len(raw_command_split) > 1:
-                    #    print("get [IDs]")
-                    #    continue
+                    toFile = False
                     if len(raw_command_split) == 2 and raw_command_split[1] == "all":
                         url = URL + "getAllKeys"
+                    elif len(raw_command_split) == 2 and raw_command_split[1] == "tofile":
+                        url = URL + "getAllKeys"
+                        toFile = True
                     else:
-                        readed_inputs = read_list_input()
+                        readed_inputs = read_list_input("get")
                         if len(readed_inputs) > 0:                   
-                            ids = [str(id) for id in readed_inputs] 
-                            #ids = [str(id) for id in raw_command_split[1:]]                        
+                            ids = [str(id) for id in readed_inputs]                                                
                             url = URL + "getKeys?id="
                             query = ','.join(ids)
                             url = url + query
                         else:
-                            makeHttp = False                   
+                            makeHttp = False
+                            print("No ID:s to GET!")                  
                     if makeHttp:                        
-                        get_response = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)
-                        
-                        res_json = get_response.json()                   
-                                            
-                        for obj in res_json:
-                            print_response_json(obj)
-                    else:
-                        print("No ID:s to get!")                               
-                
+                        get_response = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)                       
+                        if toFile:
+                            try:
+                                make_csv(get_response)            
+                            except Exception as e:
+                                print("An error occurred:", e)
+                        else:
+                            all_responces_and_print(get_response)                                
+              
 # -------------------------CREATE-----------------------------                
                 case "create":
                     makeHttp = True
                     url = URL + "createKeys"
-                    if not len(raw_command_split) > 1:
-                        print("create [ID:NAME]")
-                        print("EXAMPLE: create T1:some name, T2:some other name")
-                        continue
-
-                    ids = raw_command[7:].split(', ')
-                    
                     raw_payload = []
-                    for id in ids:
-                        nro, name = id.split(':')
-                        if nro == "":
-                            print("Student ID is missing. Aborting create!")
-                            makeHttp = False
-                            break
-                        if name == "":
-                            print("Student name is missing Aborting create!")
-                            makeHttp = False
-                            break
-                        raw_payload.append({"id":nro.strip(), "name":name.strip()})
-
+                    readed_inputs = read_list_input("create")
+                    if len(readed_inputs) == 0:                 
+                        makeHttp = False
+                        print("No user:s to CREATE!")                 
+                          
                     if makeHttp:
-                        payload = json.dumps(raw_payload)                    
+                        payload = json.dumps(readed_inputs)                    
                         
                         create_response = requests.request("POST", url, headers=HEADERS, data=payload)
-                        res_json = create_response.json()
-    
-                        for obj in res_json:
-                            print_response_json(obj)
-                    
+                        all_responces_and_print(create_response)                    
 
  # -------------------------DELETE-----------------------------
                 case "delete":
-                    url = URL + "deleteKeys?id="
-                    if not len(raw_command_split) > 1:
-                        print("delete [ID]")
-                        continue   
-
-                    ids = [str(id) for id in raw_command_split[1:]]
-                        
-                    url = URL + "deleteKeys?id="
-                    query = ','.join(ids)
-                    url = url + query                   
-
-                    delete_respose = requests.request("DELETE", url, headers=HEADERS, data=PAYLOAD)
-                    res_json = delete_respose.json()
+                    makeHttp = True
+                    url = URL + "deleteKeys?id="                    
                     
-                    for obj in res_json:
-                        print_response_json(obj) 
+                    readed_inputs = read_list_input("delete")
+                    if len(readed_inputs) > 0:
+                        ids = [str(id) for id in readed_inputs]
+                            
+                        url = URL + "deleteKeys?id="
+                        query = ','.join(ids)
+                        url = url + query                   
+
+                        delete_response = requests.request("DELETE", url, headers=HEADERS, data=PAYLOAD)                        
+                    else:
+                        makeHttp = False
+                        print("No ID:s to DELETE!")
+
+                    if makeHttp:
+                        all_responces_and_print(delete_response)                        
 
 # --------------------------SETAPI-----------------------------
                 case "setapi":                    
@@ -311,10 +430,16 @@ def main():
                     payload = json.dumps(raw_payload)
 
                     setapi_response = requests.request("POST", url, headers=HEADERS, data=payload)
-                    print(setapi_response.json())
+                    if setapi_response.status_code == 200:
+                        print(setapi_response.json())
+                    elif setapi_response.status_code == 500:
+                        print("Unexpected error.")
+                    else:                        
+                        res_json = setapi_response.json()
+                        print(res_json["message"])       
 
 # ---------------------SETPARAMETERS--------------------------
-                case "setparams":
+                case "setparameters":
                     print("\nGive new parameters. Leave empty if no new value.")
                     
                     input_responce_length = read_input(int,"Responce length: ","Integer")
@@ -347,12 +472,14 @@ def main():
                                 + ", \nTemperature: " + str(res_json['temperature'])
                                 + ", \nTopP: " + str(res_json['topP'])
                                 + ", \nPrompt: " + res_json['ModelInstructions'])
+                        elif set_parameters_response.status_code == 500:
+                            print("Unexpected error.")
                         else:
-                             res_json = set_parameters_response.json()
-                             print(res_json)       
+                            res_json = set_parameters_response.json()
+                            print(res_json["message"])       
 
 # ---------------------GETPARAMETERS--------------------------
-                case "getparams":
+                case "getparameters":
                     url = URL + "parameters"
 
                     get_parameters_response = requests.request("GET", url, headers=HEADERS, data=PAYLOAD)
@@ -362,26 +489,31 @@ def main():
                             + ", \nTemperature: " + res_json['temperature']
                             + ", \nTopP: " + res_json['topP']
                             + ", \nPrompt: " + res_json['ModelInstructions'])
+                    elif get_parameters_response.status_code == 500:
+                        print("Unexpected error.")
                     else:
-                             res_json = get_parameters_response.json()
-                             print(res_json)
+                        res_json = get_parameters_response.json()
+                        print(res_json["message"])
+
 # ---------------------------CREATEKEYSFROMCSV-------------------------
 
                 case "createkeysfromcsv":
                     print("\nGive new parameters.")
+                    try:
+                        file_full_path = read_input(str,"CSV file full path: ","String")                    
 
-                    file_full_path = read_input(str,"CSV file full path: ","String")
-                    raw_payload = read_csv(file_full_path)
+                        raw_payload = read_csv(file_full_path)
+                        if (raw_payload[0]): 
+                            url = URL + "createKeys"
 
-                    url = URL + "createKeys"
+                            payload = json.dumps(raw_payload[1])                    
+                                
+                            create_response = requests.request("POST", url, headers=HEADERS, data=payload)
+                            all_responces_and_print(create_response)
+                    except:
+                        print("Something wrong with file path!")
+                    
 
-                    payload = json.dumps(raw_payload)                    
-                        
-                    create_response = requests.request("POST", url, headers=HEADERS, data=payload)
-                    res_json = create_response.json()
-    
-                    for obj in res_json:
-                        print_response_json(obj)
 # -------------------------NOCASE-----------------------------
                 case _:
                     if not value_not_in_file_error:

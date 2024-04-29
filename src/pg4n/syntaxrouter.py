@@ -31,12 +31,24 @@ class SyntaxRouter:
         """
         Function that calls ModelHelper class with all the attributes it needs
         Returns LLM answer to pg4n
-        """        
-        if self.config_values.get("LambdaAddress") != None and self.config_values.get("APIKey") != None:
-            schema_address = "host=" + self.pg_host + " port=" + self.pg_port + " dbname="+ self.pg_name  + " user=" + self.pg_user
-            postgre_schema = Postgre_schema.get_postgre_schema(schema_address)
-            schema = "".join(str(line) for line in postgre_schema)
-            model_helper = ModelHelper(self.config_values.get("LambdaAddress"),self.config_values.get("APIKey"))
-            llm_answer = model_helper.send_request(sql_query, sql_error, schema)
-            return llm_answer       
-        return "Syntax Router Error: Missing user value(s)!!"
+        If config values is None there is no LambdaAdddres and Apikey loaded in startup
+        There is individual check for both also.
+
+        Args:
+            sql_error: syntax error message ready to sent LLM
+            sql_query: users sql query ready to sent LLM
+
+        Return:
+                LLM answer or error message
+        """
+        if self.config_values is not None:  
+            if self.config_values.get("LambdaAddress") is not None and self.config_values.get("APIKey") is not None:
+                schema_address = "host=" + self.pg_host + " port=" + self.pg_port + " dbname="+ self.pg_name  + " user=" + self.pg_user
+                postgre_schema = Postgre_schema.get_postgre_schema(schema_address)
+                schema = "".join(str(line) for line in postgre_schema)
+                model_helper = ModelHelper(self.config_values.get("LambdaAddress"),self.config_values.get("APIKey"))
+                llm_answer = model_helper.send_request(sql_query, sql_error, schema)
+                if llm_answer[0] == True:
+                    return llm_answer[1]
+                return "Error: " + llm_answer[1]      
+        return "Syntax Router Error: Missing Address, Apikey or both!!"
