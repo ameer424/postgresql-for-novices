@@ -15,12 +15,13 @@ apikey <your_apikey> - Adds users apikey to configuration file.
 exit - Shuts down the application.  
 
 Admin commands:
-get (<list_of_ids> or "all") - Finds the users by their ids or returns all users.  
+get (<list_of_ids> or "all" or "tofile") - Finds the users by their ids, find all users or find all users and write the result to csv-file..  
 create <list_of_id_and_name_pairs> - Creates users for given ids and names. Id can be for example student number/id used in school.  
+createkeysfromcsv - Give a csv-file with two columns and semicolon as separator. First column should be for ids and second column for names.  
 delete <list_of_ids> - Deletes users with given ids.  
 setapi <ON_or_OFF> - Sets Api's availability. If defined ON, users can send their requests. If set OFF, requests can not be sent.  
-setparams - Is used for setting parameters of the LLM. After giving command setparams, user is asked to give values for each parameter. Those parameters left blank wil not be modified.  
-getparams - Prints out the current parameters of the LLM.  
+setparameters - Is used for setting parameters of the LLM. After giving command setparams, user is asked to give values for each parameter. Those parameters left blank wil not be modified.  
+getparameters - Prints out the current parameters of the LLM.  
 
 In case an invalid argument is given, system alerts that command isn't found and then lists all possible commands.
 
