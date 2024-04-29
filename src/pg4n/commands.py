@@ -210,13 +210,14 @@ def read_csv(filename):
                 # Check if the row has exactly two columns
                 nro, name = row[0].split(';')
                 if nro.strip() != "" and name.strip() != "":
-                    data.append({"id":nro.strip(), "name":name.strip()})
-            print(data)
-            return data
+                    data.append({"id":nro.strip(), "name":name.strip()})            
+            return (True,data)
     except FileNotFoundError:
         print(f"Error: File '{filename}' not found")
+        return (False,"")
     except ValueError as e:
         print(f"Error reading CSV: {e}")
+        return (False,"")
 
 def make_csv(response):
     """
@@ -498,17 +499,21 @@ def main():
 
                 case "createkeysfromcsv":
                     print("\nGive new parameters.")
+                    try:
+                        file_full_path = read_input(str,"CSV file full path: ","String")                    
 
-                    file_full_path = read_input(str,"CSV file full path: ","String")
-                    raw_payload = read_csv(file_full_path)
+                        raw_payload = read_csv(file_full_path)
+                        if (raw_payload[0]): 
+                            url = URL + "createKeys"
 
-                    url = URL + "createKeys"
-
-                    payload = json.dumps(raw_payload)                    
-                        
-                    create_response = requests.request("POST", url, headers=HEADERS, data=payload)
-                    all_responces_and_print(create_response)
+                            payload = json.dumps(raw_payload[1])                    
+                                
+                            create_response = requests.request("POST", url, headers=HEADERS, data=payload)
+                            all_responces_and_print(create_response)
+                    except:
+                        print("Something wrong with file path!")
                     
+
 # -------------------------NOCASE-----------------------------
                 case _:
                     if not value_not_in_file_error:
