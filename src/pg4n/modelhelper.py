@@ -26,9 +26,13 @@ class ModelHelper:
         headers = {'Content-Type': 'application/json',
                    'x-api-key': self.apikey}
 
-        # Check if http responce 200 or something else.       
+        # Check if http responce 200, 500 or something else (4XX).       
         response = requests.post(self.lambda_url, headers=headers, data=json.dumps(body))
         if response.status_code == 200:
-            return (True,json.loads(response.text)["model_response"])        
-        return (False,response.json()) 
+            return (True,json.loads(response.text)["model_response"])
+        elif response.status_code == 500:
+            return (False,"Unexpected error in AWS!") 
+        else:
+            res_json = response.json()                 
+            return (False,res_json["message"]) 
     
