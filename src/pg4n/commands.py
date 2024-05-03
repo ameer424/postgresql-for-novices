@@ -49,7 +49,7 @@ def all_responces_and_print(response):
             for obj in res_json:
                 print_response_json(obj)
         elif response.status_code == 500:
-            print("Error in AWS.")
+            print("Unexpected error in AWS!")
         else:
             res_json = response.json()
             print(res_json["message"])
@@ -250,7 +250,7 @@ def make_csv(response):
             else:
                 print("Database was empty no users saved.")
         elif response.status_code == 500:
-            print("Error in AWS.")
+            print("Unexpected error in AWS!")
             
         else:
             res_json = response.json()
@@ -434,7 +434,7 @@ def main():
                         res_json = setapi_response.json()
                         print(res_json["result"])
                     elif setapi_response.status_code == 500:
-                        print("Unexpected error in AWS.")
+                        print("Unexpected error in AWS!")
                     else:                        
                         res_json = setapi_response.json()
                         print(res_json["result"])       
@@ -474,7 +474,7 @@ def main():
                                 + ", \nTopP: " + str(res_json['topP'])
                                 + ", \nPrompt: " + res_json['ModelInstructions'])
                         elif set_parameters_response.status_code == 500:
-                            print("Error in AWS.")
+                            print("Unexpected error in AWS!")
                         else:
                             res_json = set_parameters_response.json()
                             print(res_json["message"])       
@@ -491,7 +491,7 @@ def main():
                             + ", \nTopP: " + res_json['topP']
                             + ", \nPrompt: " + res_json['ModelInstructions'])
                     elif get_parameters_response.status_code == 500:
-                        print("Error in AWS.")
+                        print("Unexpected error in AWS!")
                     else:
                         res_json = get_parameters_response.json()
                         print(res_json["message"])
