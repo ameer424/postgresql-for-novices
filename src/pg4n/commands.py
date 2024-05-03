@@ -437,7 +437,7 @@ def main():
                         print("Unexpected error in AWS!")
                     else:                        
                         res_json = setapi_response.json()
-                        print(res_json["result"])       
+                        print(res_json["message"])       
 
 # ---------------------SETPARAMETERS--------------------------
                 case "setparameters":
